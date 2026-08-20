@@ -1,9 +1,19 @@
 package com.cashflow.ai
 
 import android.app.Application
+import com.cashflow.ai.data.ai.category.SmartCategoryClassifier
+import com.cashflow.ai.data.ai.ocr.MlKitOcrEngine
+import com.cashflow.ai.data.ai.parser.GeminiReceiptParser
+import com.cashflow.ai.data.ai.parser.LocalReceiptParser
 import com.cashflow.ai.data.local.CashFlowDatabase
 import com.cashflow.ai.data.repository.TransactionRepositoryImpl
+import com.cashflow.ai.domain.ai.CategoryClassifier
+import com.cashflow.ai.domain.ai.OcrEngine
+import com.cashflow.ai.domain.ai.ReceiptParser
 import com.cashflow.ai.domain.repository.TransactionRepository
+import com.cashflow.ai.domain.usecase.ai.ExtractReceiptTextUseCase
+import com.cashflow.ai.domain.usecase.ai.ProcessReceiptUseCase
+import com.cashflow.ai.domain.usecase.ai.SuggestCategoryUseCase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -19,6 +29,38 @@ class CashFlowApp : Application() {
             transactionDao = database.transactionDao(),
             categoryDao = database.categoryDao()
         )
+    }
+
+    val ocrEngine: OcrEngine by lazy {
+        MlKitOcrEngine()
+    }
+
+    val localReceiptParser: ReceiptParser by lazy {
+        LocalReceiptParser()
+    }
+
+    val geminiReceiptParser: ReceiptParser by lazy {
+        GeminiReceiptParser(localFallbackParser = localReceiptParser)
+    }
+
+    val categoryClassifier: CategoryClassifier by lazy {
+        SmartCategoryClassifier(transactionRepository = transactionRepository)
+    }
+
+    val processReceiptUseCase: ProcessReceiptUseCase by lazy {
+        ProcessReceiptUseCase(
+            ocrEngine = ocrEngine,
+            receiptParser = geminiReceiptParser,
+            categoryClassifier = categoryClassifier
+        )
+    }
+
+    val suggestCategoryUseCase: SuggestCategoryUseCase by lazy {
+        SuggestCategoryUseCase(categoryClassifier = categoryClassifier)
+    }
+
+    val extractReceiptTextUseCase: ExtractReceiptTextUseCase by lazy {
+        ExtractReceiptTextUseCase(ocrEngine = ocrEngine)
     }
 
     override fun onCreate() {
