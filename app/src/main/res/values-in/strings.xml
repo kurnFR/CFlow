@@ -23,4 +23,21 @@
     <string name="cancel">Batal</string>
     <string name="delete">Hapus</string>
     <string name="edit">Ubah</string>
+    <string name="scan_receipt">Pindai Struk</string>
+    <string name="scanning_receipt">Memindai Struk…</string>
+    <string name="preprocessing_image">Memproses gambar…</string>
+    <string name="recognizing_text">Membaca teks struk (OCR)…</string>
+    <string name="extracting_ai_fields">Mengekstrak data dengan Gemini AI…</string>
+    <string name="classifying_category">Menentukan kategori…</string>
+    <string name="high_confidence">Akurasi Tinggi</string>
+    <string name="medium_confidence">Akurasi Sedang</string>
+    <string name="low_confidence">Akurasi Rendah</string>
+    <string name="retake_photo">Foto Ulang</string>
+    <string name="confirm_transaction">Konfirmasi Transaksi</string>
+    <string name="merchant">Nama Merchant / Toko</string>
+    <string name="total_amount">Total Pembayaran</string>
+    <string name="date">Tanggal</string>
+    <string name="category">Kategori</string>
+    <string name="tax">Pajak (PPN/PB1)</string>
+    <string name="discount">Diskon / Potongan</string>
 </resources>

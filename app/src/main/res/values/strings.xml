@@ -23,4 +23,21 @@
     <string name="cancel">Cancel</string>
     <string name="delete">Delete</string>
     <string name="edit">Edit</string>
+    <string name="scan_receipt">Scan Receipt</string>
+    <string name="scanning_receipt">Scanning Receipt…</string>
+    <string name="preprocessing_image">Preprocessing image…</string>
+    <string name="recognizing_text">Reading receipt text (OCR)…</string>
+    <string name="extracting_ai_fields">Extracting details with Gemini AI…</string>
+    <string name="classifying_category">Classifying category…</string>
+    <string name="high_confidence">High Confidence</string>
+    <string name="medium_confidence">Medium Confidence</string>
+    <string name="low_confidence">Low Confidence</string>
+    <string name="retake_photo">Retake</string>
+    <string name="confirm_transaction">Confirm Transaction</string>
+    <string name="merchant">Merchant</string>
+    <string name="total_amount">Total Amount</string>
+    <string name="date">Date</string>
+    <string name="category">Category</string>
+    <string name="tax">Tax</string>
+    <string name="discount">Discount</string>
 </resources>

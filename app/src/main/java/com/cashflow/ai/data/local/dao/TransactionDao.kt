@@ -90,4 +90,13 @@ interface TransactionDao {
 
     @Query("UPDATE transactions SET is_synced = 1, sync_version = :newVersion WHERE id IN (:ids)")
     suspend fun markAsSynced(ids: List<Long>, newVersion: Int)
+
+    @Query("""
+        SELECT category FROM transactions 
+        WHERE (description LIKE '%' || :query || '%' OR ai_merchant LIKE '%' || :query || '%')
+        GROUP BY category 
+        ORDER BY COUNT(*) DESC 
+        LIMIT 1
+    """)
+    suspend fun getMostFrequentCategoryForQuery(query: String): String?
 }

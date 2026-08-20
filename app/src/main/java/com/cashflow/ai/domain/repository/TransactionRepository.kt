@@ -50,4 +50,6 @@ interface TransactionRepository {
     suspend fun insertCategory(category: Category): Result<Long>
 
     suspend fun seedDefaultCategoriesIfEmpty()
+
+    suspend fun getMostFrequentCategoryForQuery(query: String): String?
 }

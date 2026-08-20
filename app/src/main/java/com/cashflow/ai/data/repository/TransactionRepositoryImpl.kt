@@ -235,4 +235,8 @@ class TransactionRepositoryImpl(
             categoryDao.insertCategories(defaultCategories)
         }
     }
+
+    override suspend fun getMostFrequentCategoryForQuery(query: String): String? = withContext(Dispatchers.IO) {
+        if (query.isBlank()) null else transactionDao.getMostFrequentCategoryForQuery(query.trim())
+    }
 }
