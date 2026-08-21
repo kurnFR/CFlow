@@ -115,8 +115,8 @@ dependencies {
 
     // Google Sheets & Drive API Clients
     implementation("com.google.api-client:google-api-client-android:2.2.0")
-    implementation("com.google.apis:google-api-services-sheets:v4-rev20240704-2.0.0")
-    implementation("com.google.apis:google-api-services-drive:v3-rev20240212-2.0.0")
+    implementation("com.google.apis:google-api-services-sheets:v4-rev20250603-2.0.0")
+    implementation("com.google.apis:google-api-services-drive:v3-rev20251210-2.0.0")
 
     // MPAndroidChart
     implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
