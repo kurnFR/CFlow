@@ -15,6 +15,22 @@ object DateUtils {
         return isoFormat.format(Date())
     }
 
+    fun getCurrentDateString(): String = today()
+
+    fun getYesterdayDateString(): String {
+        val cal = Calendar.getInstance()
+        cal.add(Calendar.DAY_OF_YEAR, -1)
+        return isoFormat.format(cal.time)
+    }
+
+    fun parseIsoDate(isoDate: String): Date? {
+        return try {
+            isoFormat.parse(isoDate)
+        } catch (e: Exception) {
+            null
+        }
+    }
+
     fun formatDate(timestamp: Long): String {
         return isoFormat.format(Date(timestamp))
     }

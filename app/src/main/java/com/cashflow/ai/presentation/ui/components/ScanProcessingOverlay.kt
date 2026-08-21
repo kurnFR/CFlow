@@ -64,9 +64,9 @@ fun ScanProcessingOverlay(
         label = "rotation"
     )
 
-    val (title, description, icon, progress) = when (scanState) {
+    val config = when (scanState) {
         is AiScanState.Preprocessing -> {
-            Tuple4(
+            ScanStepDisplayConfig(
                 "Enhancing Image",
                 "Optimizing contrast & correcting orientation…",
                 Icons.Default.CameraAlt,
@@ -74,7 +74,7 @@ fun ScanProcessingOverlay(
             )
         }
         is AiScanState.ExtractingText -> {
-            Tuple4(
+            ScanStepDisplayConfig(
                 "Reading Receipt",
                 "Extracting text with on-device ML Kit OCR…",
                 Icons.Default.DocumentScanner,
@@ -82,7 +82,7 @@ fun ScanProcessingOverlay(
             )
         }
         is AiScanState.ParsingReceipt -> {
-            Tuple4(
+            ScanStepDisplayConfig(
                 "AI Parsing",
                 "Gemini is analyzing amounts, merchant & items…",
                 Icons.Default.AutoAwesome,
@@ -90,7 +90,7 @@ fun ScanProcessingOverlay(
             )
         }
         is AiScanState.ClassifyingCategory -> {
-            Tuple4(
+            ScanStepDisplayConfig(
                 "Smart Categorization",
                 "Matching categories and transaction history…",
                 Icons.Default.Category,
@@ -98,14 +98,14 @@ fun ScanProcessingOverlay(
             )
         }
         is AiScanState.Error -> {
-            Tuple4(
+            ScanStepDisplayConfig(
                 "Scanning Failed",
                 scanState.message,
                 Icons.Default.DocumentScanner,
                 1.0f
             )
         }
-        else -> Tuple4("Processing", "Please wait…", Icons.Default.AutoAwesome, 0.5f)
+        else -> ScanStepDisplayConfig("Processing", "Please wait…", Icons.Default.AutoAwesome, 0.5f)
     }
 
     Box(
@@ -148,7 +148,7 @@ fun ScanProcessingOverlay(
                             .background(MaterialTheme.colorScheme.primaryContainer)
                     ) {
                         Icon(
-                            imageVector = icon,
+                            imageVector = config.icon,
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.onPrimaryContainer,
                             modifier = Modifier.size(28.dp)
@@ -159,7 +159,7 @@ fun ScanProcessingOverlay(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 Text(
-                    text = title,
+                    text = config.title,
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface
@@ -168,7 +168,7 @@ fun ScanProcessingOverlay(
                 Spacer(modifier = Modifier.height(6.dp))
 
                 Text(
-                    text = description,
+                    text = config.description,
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center
@@ -177,7 +177,7 @@ fun ScanProcessingOverlay(
                 Spacer(modifier = Modifier.height(20.dp))
 
                 LinearProgressIndicator(
-                    progress = { progress },
+                    progress = { config.progress },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(6.dp)
@@ -199,4 +199,9 @@ fun ScanProcessingOverlay(
     }
 }
 
-private data class Tuple4<A, B, C, D>(val a: A, val b: B, val c: C, val d: D)
+private data class ScanStepDisplayConfig(
+    val title: String,
+    val description: String,
+    val icon: androidx.compose.ui.graphics.vector.ImageVector,
+    val progress: Float
+)

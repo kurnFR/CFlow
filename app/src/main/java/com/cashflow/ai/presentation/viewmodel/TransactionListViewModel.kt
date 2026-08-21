@@ -62,13 +62,13 @@ class TransactionListViewModel(
         _selectedType,
         _searchQuery
     ) { dateRange, category, type, query ->
-        Tuple4(dateRange, category, type, query)
-    }.flatMapLatest { (dateRange, category, type, query) ->
+        TransactionFilterCriteria(dateRange, category, type, query)
+    }.flatMapLatest { criteria ->
         transactionRepository.getTransactions(
-            dateRange = dateRange,
-            category = category,
-            type = type,
-            searchQuery = query
+            dateRange = criteria.dateRange,
+            category = criteria.category,
+            type = criteria.type,
+            searchQuery = criteria.query
         )
     }.combine(_categories) { transactions, categories ->
         TransactionListUiState(
@@ -116,7 +116,12 @@ class TransactionListViewModel(
         _infoMessage.value = null
     }
 
-    private data class Tuple4<A, B, C, D>(val a: A, val b: B, val c: C, val d: D)
+    private data class TransactionFilterCriteria(
+        val dateRange: DateRange,
+        val category: String?,
+        val type: TransactionType?,
+        val query: String
+    )
 
     class Factory(
         private val transactionRepository: TransactionRepository

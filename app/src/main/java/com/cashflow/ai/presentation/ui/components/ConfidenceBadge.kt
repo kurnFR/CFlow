@@ -33,29 +33,29 @@ fun ConfidenceBadge(
     confidence: ReceiptConfidence,
     modifier: Modifier = Modifier
 ) {
-    val (bgColor, textColor, icon, label) = when {
+    val config = when {
         confidence.isHighConfidence -> {
-            Tuple4(
-                ConfidenceHighColor.copy(alpha = 0.15f),
-                ConfidenceHighColor,
-                Icons.Default.CheckCircle,
-                stringResource(R.string.high_confidence)
+            ConfidenceBadgeConfig(
+                bgColor = ConfidenceHighColor.copy(alpha = 0.15f),
+                textColor = ConfidenceHighColor,
+                icon = Icons.Default.CheckCircle,
+                label = stringResource(R.string.high_confidence)
             )
         }
         confidence.isMediumConfidence -> {
-            Tuple4(
-                ConfidenceMediumColor.copy(alpha = 0.15f),
-                ConfidenceMediumColor,
-                Icons.Default.Info,
-                stringResource(R.string.medium_confidence)
+            ConfidenceBadgeConfig(
+                bgColor = ConfidenceMediumColor.copy(alpha = 0.15f),
+                textColor = ConfidenceMediumColor,
+                icon = Icons.Default.Info,
+                label = stringResource(R.string.medium_confidence)
             )
         }
         else -> {
-            Tuple4(
-                ConfidenceLowColor.copy(alpha = 0.15f),
-                ConfidenceLowColor,
-                Icons.Default.Warning,
-                stringResource(R.string.low_confidence)
+            ConfidenceBadgeConfig(
+                bgColor = ConfidenceLowColor.copy(alpha = 0.15f),
+                textColor = ConfidenceLowColor,
+                icon = Icons.Default.Warning,
+                label = stringResource(R.string.low_confidence)
             )
         }
     }
@@ -64,24 +64,29 @@ fun ConfidenceBadge(
 
     Row(
         modifier = modifier
-            .background(bgColor, RoundedCornerShape(16.dp))
+            .background(config.bgColor, RoundedCornerShape(16.dp))
             .padding(horizontal = 10.dp, vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(
-            imageVector = icon,
+            imageVector = config.icon,
             contentDescription = null,
-            tint = textColor,
+            tint = config.textColor,
             modifier = Modifier.size(14.dp)
         )
         Spacer(modifier = Modifier.width(4.dp))
         Text(
-            text = "AI $percentage% • $label",
+            text = "AI $percentage% • ${config.label}",
             style = MaterialTheme.typography.labelSmall,
-            color = textColor,
+            color = config.textColor,
             fontWeight = FontWeight.Bold
         )
     }
 }
 
-private data class Tuple4<A, B, C, D>(val a: A, val b: B, val c: C, val d: D)
+private data class ConfidenceBadgeConfig(
+    val bgColor: Color,
+    val textColor: Color,
+    val icon: androidx.compose.ui.graphics.vector.ImageVector,
+    val label: String
+)

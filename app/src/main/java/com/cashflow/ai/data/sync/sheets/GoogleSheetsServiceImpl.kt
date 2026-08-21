@@ -5,8 +5,8 @@ import com.cashflow.ai.core.constants.AppConstants
 import com.cashflow.ai.data.sync.auth.GoogleAuthManager
 import com.cashflow.ai.domain.model.Transaction
 import com.cashflow.ai.domain.model.sync.SpreadsheetInfo
-import com.google.api.client.extensions.android.http.AndroidHttp
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential
+import com.google.api.client.http.javanet.NetHttpTransport
 import com.google.api.client.json.gson.GsonFactory
 import com.google.api.services.drive.Drive
 import com.google.api.services.drive.DriveScopes
@@ -24,7 +24,7 @@ class GoogleSheetsServiceImpl(
 ) : GoogleSheetsService {
 
     private val jsonFactory = GsonFactory.getDefaultInstance()
-    private val httpTransport = AndroidHttp.newCompatibleTransport()
+    private val httpTransport = NetHttpTransport()
 
     private fun getSheetsClient(): Sheets? {
         val account = authManager.getSignedInAccount() ?: return null

@@ -2,9 +2,9 @@ package com.cashflow.ai.data.sync.drive
 
 import android.content.Context
 import com.cashflow.ai.data.sync.auth.GoogleAuthManager
-import com.google.api.client.extensions.android.http.AndroidHttp
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential
 import com.google.api.client.http.FileContent
+import com.google.api.client.http.javanet.NetHttpTransport
 import com.google.api.client.json.gson.GsonFactory
 import com.google.api.services.drive.Drive
 import com.google.api.services.drive.DriveScopes
@@ -20,7 +20,7 @@ class GoogleDriveServiceImpl(
 ) : GoogleDriveService {
 
     private val jsonFactory = GsonFactory.getDefaultInstance()
-    private val httpTransport = AndroidHttp.newCompatibleTransport()
+    private val httpTransport = NetHttpTransport()
     private var cachedFolderId: String? = null
 
     private fun getDriveClient(): Drive? {
