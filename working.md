@@ -1,7 +1,7 @@
 # CashFlow AI (CFlow) - Implementation Status & Roadmap
 
-**Status Date:** August 20, 2026  
-**Architecture:** Clean Architecture + MVVM (Android Jetpack Compose, Room DB, Google ML Kit, Google Gemini AI)  
+**Status Date:** August 21, 2026  
+**Architecture:** Clean Architecture + MVVM (Android Jetpack Compose, Room DB, Google ML Kit, Google Gemini AI, MPAndroidChart)  
 **Repository Branch:** `main`
 
 ---
@@ -12,9 +12,9 @@
 | :--- | :--- | :---: | :--- |
 | **Part 1** | **Foundation & Data Layer** | **COMPLETED** (`d5ca80d`) | Multi-project Gradle, Room Database, DAOs, Domain Models, Mappers, Repositories, Currency/Date utilities, Unit tests |
 | **Part 2** | **AI Vision & OCR Pipeline** | **COMPLETED** (`33699f7`) | CameraX Manager, Image Preprocessor (rotation/contrast), ML Kit OCR Engine, Local Regex Fallback Parser, Gemini Cloud Parser, 4-Tier Smart Category Classifier, Use Cases, Unit tests |
-| **Part 3** | **Core UI & Transaction Flows** | **COMPLETED** | Material 3 Design System, CameraX Scan Screen, Add/Edit Transaction Form (Manual + Review), Transaction List, ViewModels, Navigation Graph, Unit tests |
-| **Part 4** | **Analytics & Dashboard Engine** | **NEXT** | Summary Cards, MPAndroidChart (Pie Chart for categories, Line Chart for monthly trends), Filter Engine |
-| **Part 5** | **Google Sheets & Drive Sync** | **PLANNED** | Google Sign-In (OAuth 2.0), Sheets API v4 integration, Drive image upload, WorkManager background sync, Conflict resolution |
+| **Part 3** | **Core UI & Transaction Flows** | **COMPLETED** (`75bbe20`) | Material 3 Design System, CameraX Scan Screen, Add/Edit Transaction Form (Manual + Review), Transaction List, ViewModels, Navigation Graph, Unit tests |
+| **Part 4** | **Analytics & Dashboard Engine** | **COMPLETED** | Summary Cards, MPAndroidChart Pie Chart (Category Breakdown), Line Chart (Monthly Trends), Dashboard Screen & ViewModel, Unit tests |
+| **Part 5** | **Google Sheets & Drive Sync** | **NEXT** | Google Sign-In (OAuth 2.0), Sheets API v4 integration, Drive receipt image upload, WorkManager background sync, Conflict resolution |
 
 ---
 
@@ -36,37 +36,29 @@
 - **CameraX Manager**: `CameraManager` handling preview, flash, torch toggle, camera flip, and photo capture.
 - **Unit Tests**: Full test suite covering regex receipt parsing, category classification, JSON cleaning, and pipeline state transitions.
 
-### Part 3: Core UI & Transaction Flows
+### Part 3: Core UI & Transaction Flows (`75bbe20`)
 - **Material 3 Theme & Design Tokens**: `Color.kt` (teal brand palette), `Type.kt` (typography scale), `Shape.kt`, `Theme.kt` with dynamic & dark theme support.
 - **Navigation Routing**: `Screen.kt` supporting `Dashboard`, `Transactions`, `AddTransaction`, `EditTransaction`, `CameraScan`, `Settings`.
-- **Reusable UI Components**:
-  - `ConfidenceBadge.kt`: Visual confidence badge (High $\ge 85\%$, Medium $70-84\%$, Low $< 70\%$).
-  - `AmountInputField.kt`: Currency formatted text field with IDR/USD switcher dropdown.
-  - `CategorySelector.kt`: Interactive category chip grid with icon badges and AI auto-suggest highlights.
-  - `DatePickerModal.kt`: Material 3 date picker dialog with "Today" / "Yesterday" quick presets.
-  - `TransactionCard.kt`: Transaction list card with category icons, AI badges, and color-coded amounts.
-  - `FilterChips.kt`: Date range and transaction type filter chip bar.
-  - `ScanProcessingOverlay.kt`: Animated scanning HUD with step progress indicators.
-  - `AppBottomNavigation.kt`: NavigationBar with items for Dashboard, Transactions, Settings.
-- **ViewModels**:
-  - `AddEditTransactionViewModel.kt`: Form state management, real-time AI category suggestion, and save/update flow.
-  - `TransactionListViewModel.kt`: Search query filtering, category/date filters, and swipe-to-delete.
-  - `CameraScanViewModel.kt`: Camera capture & gallery picker binding with `ProcessReceiptUseCase`.
-- **Screens**:
-  - `CameraScanScreen.kt`: CameraX preview, framing guide box, torch/flip controls, gallery picker, and live scanning HUD.
-  - `AddEditTransactionScreen.kt`: Dual-mode form (Manual Entry + Receipt Review with AI confidence breakdown).
-  - `TransactionListScreen.kt`: Searchable, filtered list of all transactions with empty states and FAB.
-  - `MainAppScaffold.kt`: Root scaffold with speed-dial action sheet ("Scan Receipt", "Choose from Gallery", "Manual Entry") and NavHost.
-  - `MainActivity.kt`: Set content to `CashFlowTheme` and `MainAppScaffold`.
-- **Unit Tests**:
-  - `AddEditTransactionViewModelTest.kt`: Form validation, real-time category suggestion, receipt population, save flow.
-  - `TransactionListViewModelTest.kt`: Filter updates, search query changes, delete action.
-  - `CameraScanViewModelTest.kt`: Scan state initialization and reset.
+- **Reusable UI Components**: `ConfidenceBadge.kt`, `AmountInputField.kt`, `CategorySelector.kt`, `DatePickerModal.kt`, `TransactionCard.kt`, `FilterChips.kt`, `ScanProcessingOverlay.kt`, `AppBottomNavigation.kt`.
+- **ViewModels**: `AddEditTransactionViewModel.kt`, `TransactionListViewModel.kt`, `CameraScanViewModel.kt`.
+- **Screens**: `CameraScanScreen.kt`, `AddEditTransactionScreen.kt`, `TransactionListScreen.kt`, `MainAppScaffold.kt`, `MainActivity.kt`.
+- **Unit Tests**: Form validation, category suggestions, receipt JSON deserialization, and filter updates.
+
+### Part 4: Analytics & Dashboard Engine
+- **Summary Cards**: [`SummaryCards.kt`](file:///home/BIS/CFlow/app/src/main/java/com/cashflow/ai/presentation/ui/components/SummaryCards.kt) displaying Income, Expense, and Net Balance with period-over-period percentage growth indicators.
+- **Expense by Category (Pie Chart)**: [`CategoryPieChart.kt`](file:///home/BIS/CFlow/app/src/main/java/com/cashflow/ai/presentation/ui/components/charts/CategoryPieChart.kt) using MPAndroidChart donut chart with center totals and category legend chips.
+- **Monthly Trends (Line Chart)**: [`MonthlyTrendsLineChart.kt`](file:///home/BIS/CFlow/app/src/main/java/com/cashflow/ai/presentation/ui/components/charts/MonthlyTrendsLineChart.kt) plotting Income, Expense, and Net Balance trajectory curves across months.
+- **Dashboard Screen & ViewModel**:
+  - [`DashboardViewModel.kt`](file:///home/BIS/CFlow/app/src/main/java/com/cashflow/ai/presentation/viewmodel/DashboardViewModel.kt): Reactive combination of summary, category breakdowns, monthly trends, and top 5 recent transactions.
+  - [`DashboardScreen.kt`](file:///home/BIS/CFlow/app/src/main/java/com/cashflow/ai/presentation/ui/screens/dashboard/DashboardScreen.kt): Complete dashboard view with date filters, summary cards, charts, and recent transaction links.
+  - [`MainAppScaffold.kt`](file:///home/BIS/CFlow/app/src/main/java/com/cashflow/ai/presentation/ui/MainAppScaffold.kt): Integrated as the start destination tab.
+- **Unit Tests**: [`DashboardViewModelTest.kt`](file:///home/BIS/CFlow/app/src/test/java/com/cashflow/ai/presentation/viewmodel/DashboardViewModelTest.kt) verifying summary calculations, aggregations, and date range updates.
 
 ---
 
-## 🎯 Next Milestone: Part 4 - Analytics & Dashboard Engine
-1. **Summary Cards**: Income card, Expense card, Net Balance card with period-over-period percentage growth calculation.
-2. **Category Expense Pie Chart**: MPAndroidChart Compose wrapper visualizing expense breakdown by category with custom legend.
-3. **Monthly Trends Line Chart**: MPAndroidChart Compose wrapper displaying Income vs Expense vs Net trends across 6 months.
-4. **Dashboard Screen & ViewModel**: `DashboardViewModel` querying Room database aggregations and feeding live dashboard state.
+## 🎯 Next Milestone: Part 5 - Google Sheets & Drive Sync Engine
+1. **Google OAuth 2.0 & Sign-In**: Credential management, token refresh, and `EncryptedSharedPreferences` token storage.
+2. **Google Sheets API v4 Client**: Spreadsheet creation/selection, schema verification (Columns A-M), and batch row syncing (`max 100` rows per batch).
+3. **Google Drive API v3 Client**: Image compression & uploading receipt photos to user's Google Drive folder.
+4. **Offline Sync Manager & WorkManager**: Priority queue (`CRITICAL`, `HIGH`, `NORMAL`, `LOW`), periodic background sync, and two-way conflict resolution (`LOCAL_WINS`, `REMOTE_WINS`, `MERGE`).
+5. **Settings Screen UI**: Google Account status, Spreadsheet switcher, manual sync trigger, currency preferences, and AI toggles.

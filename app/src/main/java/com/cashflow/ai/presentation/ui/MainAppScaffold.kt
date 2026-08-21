@@ -59,6 +59,9 @@ import com.cashflow.ai.presentation.viewmodel.CameraScanViewModel
 import com.cashflow.ai.presentation.viewmodel.TransactionListViewModel
 import kotlinx.coroutines.launch
 
+import com.cashflow.ai.presentation.ui.screens.dashboard.DashboardScreen
+import com.cashflow.ai.presentation.viewmodel.DashboardViewModel
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainAppScaffold() {
@@ -118,16 +121,28 @@ fun MainAppScaffold() {
     ) { innerPadding ->
         NavHost(
             navController = navController,
-            startDestination = Screen.Transactions.route,
+            startDestination = Screen.Dashboard.route,
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
             composable(Screen.Dashboard.route) {
-                // Dashboard Screen
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("Dashboard (Milestone Part 4)", style = MaterialTheme.typography.titleLarge)
-                }
+                val dashboardViewModel: DashboardViewModel = viewModel(
+                    factory = DashboardViewModel.Factory(app.transactionRepository)
+                )
+                DashboardScreen(
+                    viewModel = dashboardViewModel,
+                    onNavigateToTransactions = {
+                        navController.navigate(Screen.Transactions.route) {
+                            popUpTo(Screen.Dashboard.route) { saveState = true }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    },
+                    onTransactionClick = { transaction ->
+                        navController.navigate(Screen.EditTransaction.createRoute(transaction.id))
+                    }
+                )
             }
 
             composable(Screen.Transactions.route) {
