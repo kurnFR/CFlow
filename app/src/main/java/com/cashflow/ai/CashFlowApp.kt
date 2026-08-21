@@ -63,6 +63,27 @@ class CashFlowApp : Application() {
         ExtractReceiptTextUseCase(ocrEngine = ocrEngine)
     }
 
+    val googleAuthManager: com.cashflow.ai.data.sync.auth.GoogleAuthManager by lazy {
+        com.cashflow.ai.data.sync.auth.GoogleAuthManager(this)
+    }
+
+    val googleSheetsService: com.cashflow.ai.data.sync.sheets.GoogleSheetsService by lazy {
+        com.cashflow.ai.data.sync.sheets.GoogleSheetsServiceImpl(this, googleAuthManager)
+    }
+
+    val googleDriveService: com.cashflow.ai.data.sync.drive.GoogleDriveService by lazy {
+        com.cashflow.ai.data.sync.drive.GoogleDriveServiceImpl(this, googleAuthManager)
+    }
+
+    val syncManager: com.cashflow.ai.data.sync.SyncManager by lazy {
+        com.cashflow.ai.data.sync.SyncManager(
+            transactionRepository = transactionRepository,
+            sheetsService = googleSheetsService,
+            driveService = googleDriveService,
+            authManager = googleAuthManager
+        )
+    }
+
     override fun onCreate() {
         super.onCreate()
         instance = this
@@ -71,6 +92,9 @@ class CashFlowApp : Application() {
         CoroutineScope(Dispatchers.IO).launch {
             transactionRepository.seedDefaultCategoriesIfEmpty()
         }
+
+        // Schedule periodic background sync
+        com.cashflow.ai.data.sync.work.SyncWorker.enqueuePeriodicSync(this)
     }
 
     companion object {

@@ -231,9 +231,16 @@ fun MainAppScaffold() {
             }
 
             composable(Screen.Settings.route) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("Settings & Sync (Milestone Part 5)", style = MaterialTheme.typography.titleLarge)
-                }
+                val settingsViewModel: com.cashflow.ai.presentation.viewmodel.SettingsViewModel = viewModel(
+                    factory = com.cashflow.ai.presentation.viewmodel.SettingsViewModel.Factory(
+                        app.googleAuthManager,
+                        app.syncManager,
+                        app.googleSheetsService
+                    )
+                )
+                com.cashflow.ai.presentation.ui.screens.settings.SettingsScreen(
+                    viewModel = settingsViewModel
+                )
             }
         }
 
