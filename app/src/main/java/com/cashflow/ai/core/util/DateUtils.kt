@@ -31,6 +31,10 @@ object DateUtils {
         }
     }
 
+    fun isValidDate(dateStr: String): Boolean {
+        return parseIsoDate(dateStr) != null
+    }
+
     fun formatDate(timestamp: Long): String {
         return isoFormat.format(Date(timestamp))
     }
