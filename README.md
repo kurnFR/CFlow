@@ -5,6 +5,52 @@ CASHFLOW AI - COMPLETE PRODUCTION PRD
 Version: 2.0 (Production Ready)
 Date: August 19, 2026
 Status: Development Ready
+IMPLEMENTATION UPDATE - August 24, 2026
+
+The current implementation includes the following improvements beyond the
+original PRD:
+
+    - Offline deterministic financial insights for income, expenses, savings rate, and top expense categories.
+    - A persisted Room monthly_closes table containing monthly snapshots, insight text, timestamps, and close status.
+    - Automatic weekly insight refresh through WorkManager.
+    - Automatic previous-month snapshot generation at the month transition.
+    - Dashboard AI action for manually generating a current insight at any time.
+    - Strict ISO date validation, including rejection of impossible dates.
+    - Positive finite validation for transaction amounts, tax, and discounts.
+    - Transaction UUID preservation when editing, preventing sync identity changes.
+    - Gradle property wiring for GEMINI_API_KEY and GOOGLE_CLIENT_ID.
+    - A non-destructive Room migration for the monthly close schema.
+
+Insights are generated locally first, so the dashboard remains usable offline.
+The current insight engine is explainable and rule-based; Gemini can be added
+later as an optional language layer without making financial calculations opaque.
+
+---
+
+## 🚀 CFlow 2.0.0 — 9Router & Antigravity UX/UI Review & Improvement Roadmap
+
+### 1. Architectural & UX Strengths
+- **Clean MVVM + Domain Separation**: Business use cases (`GenerateFinancialInsightUseCase`, `ProcessReceiptUseCase`, `SuggestCategoryUseCase`) strictly isolate presentation from data storage and cloud AI APIs.
+- **4-Stage Resilient AI Pipeline**: `CameraX Preview` → `ML Kit On-Device OCR` → `Gemini 1.5 Flash Parser` → `4-Tier Smart Classifier` with on-device heuristic fallback.
+- **Offline-First Snapshot Engine**: `MonthlyCloseEntity` records deterministic monthly performance and financial health insights without relying on cloud availability.
+- **Two-Way Google Sheets & Drive Sync**: 13-column bidirectional synchronization with `EncryptedSharedPreferences` token security and WorkManager background worker.
+
+### 2. High-Impact Enhancements (Approved for Implementation)
+
+| Priority | Feature / Fix | Impact & User Benefit |
+|---|---|---|
+| **P0 - Must Have** | **Locale-Aware Currency & Number Engine** | Prevents silent data corruption for European (`€24,50`), Indonesian (`Rp 50.000`), and US (`$50.00`) decimal/thousand formats. |
+| **P0 - Must Have** | **Gemini Timeout & Offline Feedback Banner** | Enforces 15s timeout with instant fallback to on-device OCR, updating the AI Confidence Badge with *"Parsed Offline (On-Device OCR) • Please verify details"*. |
+| **P0 - Must Have** | **MonthlyClose Database Integrity** | Enforces `@Entity(primaryKeys = ["month"])` and `OnConflictStrategy.REPLACE` so repeated insight generation updates existing records safely. |
+| **P1 - Should Have** | **Smart Category Learning Memory** | Remembers user merchant-to-category overrides locally so frequent merchants (e.g. *Starbucks* → *Coffee*) classify with 99% accuracy on future scans. |
+| **P1 - Should Have** | **TopAppBar Live Sync Indicator** | Shows real-time sync status (`Synced ✓`, `Syncing ⟳`, `Sync Failed ⚠️`) with a 1-tap manual sync button. |
+| **P1 - Should Have** | **Interactive Empty States** | Friendly empty states on Dashboard and Transaction List with direct *"Scan Receipt"* and *"Add Transaction"* action buttons. |
+| **P2 - Nice to Have** | **Tactile Haptic Feedback** | Haptic confirmation on photo shutter capture, successful AI parsing, and transaction creation. |
+
+### 3. Evaluated & Rejected / Deferred Suggestions
+- ❌ **Voice Input FAB (Rejected)**: Adds unnecessary microphone runtime permission friction and voice API overhead without significant value over the 1-tap quick add and camera scanner.
+- ❌ **SQLite FTS4/FTS5 Migration (Deferred)**: Standard indexed queries with debounced 300ms Kotlin Flows achieve sub-2ms latency on personal transaction sets without complex SQLite virtual table migrations.
+- ❌ **Silent Drive Photo Purge on Delete (Rejected)**: Deleting a local transaction should not automatically purge Google Drive receipt photo archives without explicit user consent.
 TABLE OF CONTENTS
 
     Executive Summary
@@ -76,6 +122,8 @@ CashFlow AI is a mobile-first Android application enabling users to record incom
     Control: User-owned Google Sheets as source of truth
 
     Insights: Real-time dashboard with charts and filters
+
+    Weekly progress updates and monthly financial close insights
 
     Privacy: No server-side storage of financial data
 
@@ -1459,12 +1507,9 @@ androidTestImplementation 'androidx.test.ext:junit:1.1.5'
 androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
 androidTestImplementation 'androidx.compose.ui:ui-test-junit4:1.6.3'
 
-16.3 Environment Setup
-kotlin
-
-// BuildConfig Keys
-buildConfigField("String", "GEMINI_API_KEY", "\"${project.properties["GEMINI_API_KEY"]}\"")
-buildConfigField("String", "GOOGLE_CLIENT_ID", "\"${project.properties["GOOGLE_CLIENT_ID"]}\"")
+// BuildConfig Keys are read from Gradle properties by app/build.gradle.kts
+val geminiApiKey = providers.gradleProperty("GEMINI_API_KEY").orNull ?: ""
+val googleClientId = providers.gradleProperty("GOOGLE_CLIENT_ID").orNull ?: ""
 
 // Local Properties (local.properties)
 GEMINI_API_KEY=your_gemini_api_key_here
@@ -1499,6 +1544,13 @@ GOOGLE_CLIENT_ID=your_google_client_id_here
 
     ✅ OAuth 2.0 Google Sign-In
 
+    ✅ Offline financial insight generation
+
+    ✅ Weekly automatic insight refresh
+
+    ✅ Persisted monthly close snapshots
+
+    ✅ Manual dashboard insight refresh
 17.2 Quality Metrics
 
     ✅ AI Accuracy ≥ 95% on common receipts
@@ -1642,8 +1694,17 @@ text
 - Transactions List
 - Settings
 
-Appendix E: Deployment Checklist
-text
+Local debug build:
+
+    ./gradlew assembleDebug
+
+APK output:
+
+    app/build/outputs/apk/debug/app-debug.apk
+
+Install on a connected Android device:
+
+    adb install -r app/build/outputs/apk/debug/app-debug.apk
 
 □ Build signed APK/AAB
 □ Test on multiple devices (API 26-34)

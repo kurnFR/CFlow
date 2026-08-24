@@ -5,12 +5,14 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
+import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.cashflow.ai.core.constants.AppConstants
 import com.cashflow.ai.data.local.converter.DateConverters
 import com.cashflow.ai.data.local.dao.CategoryDao
 import com.cashflow.ai.data.local.dao.TransactionDao
 import com.cashflow.ai.data.local.entity.CategoryEntity
+import com.cashflow.ai.data.local.entity.MonthlyCloseEntity
 import com.cashflow.ai.data.local.entity.TransactionEntity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -19,9 +21,10 @@ import kotlinx.coroutines.launch
 @Database(
     entities = [
         TransactionEntity::class,
-        CategoryEntity::class
+        CategoryEntity::class,
+        MonthlyCloseEntity::class
     ],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 @TypeConverters(DateConverters::class)
@@ -42,6 +45,7 @@ abstract class CashFlowDatabase : RoomDatabase() {
                     AppConstants.DATABASE_NAME
                 )
                     .addCallback(DatabaseCallback())
+                    .addMigrations(MIGRATION_1_2)
                     .fallbackToDestructiveMigration()
                     .build()
                 INSTANCE = instance
@@ -49,6 +53,23 @@ abstract class CashFlowDatabase : RoomDatabase() {
             }
         }
 
+        private val MIGRATION_1_2 = object : Migration(1, 2) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL(
+                    """CREATE TABLE IF NOT EXISTS monthly_closes (
+                        month TEXT NOT NULL PRIMARY KEY,
+                        closed_at INTEGER,
+                        income REAL NOT NULL,
+                        expense REAL NOT NULL,
+                        net REAL NOT NULL,
+                        top_expense_category TEXT,
+                        insight TEXT NOT NULL,
+                        generated_at INTEGER NOT NULL,
+                        is_ai_generated INTEGER NOT NULL
+                    )"""
+                )
+            }
+        }
         private class DatabaseCallback : Callback() {
             override fun onCreate(db: SupportSQLiteDatabase) {
                 super.onCreate(db)

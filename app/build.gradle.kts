@@ -4,6 +4,12 @@ plugins {
     id("com.google.devtools.ksp")
 }
 
+val geminiApiKey = providers.gradleProperty("GEMINI_API_KEY").orNull ?: ""
+val googleClientId = providers.gradleProperty("GOOGLE_CLIENT_ID").orNull ?: ""
+val escapeBuildConfigValue: (String) -> String = { value ->
+    value.replace("\\", "\\\\").replace("\"", "\\\"")
+}
+
 android {
     namespace = "com.cashflow.ai"
     compileSdk = 34
@@ -20,8 +26,8 @@ android {
             useSupportLibrary = true
         }
 
-        buildConfigField("String", "GEMINI_API_KEY", "\"\"")
-        buildConfigField("String", "GOOGLE_CLIENT_ID", "\"\"")
+        buildConfigField("String", "GEMINI_API_KEY", "\"${escapeBuildConfigValue(geminiApiKey)}\"")
+        buildConfigField("String", "GOOGLE_CLIENT_ID", "\"${escapeBuildConfigValue(googleClientId)}\"")
     }
 
     buildTypes {

@@ -25,6 +25,7 @@ import java.util.UUID
 
 data class AddEditTransactionUiState(
     val transactionId: Long? = null,
+    val transactionUuid: String? = null,
     val isEditMode: Boolean = false,
     val description: String = "",
     val amountText: String = "",
@@ -197,6 +198,7 @@ class AddEditTransactionViewModel(
             _uiState.update { state ->
                 state.copy(
                     transactionId = transaction.id,
+                    transactionUuid = transaction.uuid,
                     isEditMode = true,
                     description = transaction.description,
                     amountText = if (transaction.amount % 1.0 == 0.0) transaction.amount.toLong().toString() else transaction.amount.toString(),
@@ -227,20 +229,32 @@ class AddEditTransactionViewModel(
         }
 
         val parsedAmount = state.amountText.replace(",", ".").toDoubleOrNull()
-        if (parsedAmount == null || parsedAmount <= 0.0) {
+        if (parsedAmount == null || !parsedAmount.isFinite() || parsedAmount <= 0.0) {
             _uiState.update { it.copy(errorMessage = "Please enter a valid positive amount") }
+            return
+        }
+
+        if (!DateUtils.isValidDate(state.date)) {
+            _uiState.update { it.copy(errorMessage = "Please enter a valid date") }
             return
         }
 
         val parsedTax = state.taxText.replace(",", ".").toDoubleOrNull()
         val parsedDiscount = state.discountText.replace(",", ".").toDoubleOrNull()
 
+        if (parsedTax != null && (!parsedTax.isFinite() || parsedTax < 0.0) ||
+            parsedDiscount != null && (!parsedDiscount.isFinite() || parsedDiscount < 0.0)
+        ) {
+            _uiState.update { it.copy(errorMessage = "Tax and discount must be valid non-negative amounts") }
+            return
+        }
+
         _uiState.update { it.copy(isSaving = true, errorMessage = null) }
 
         viewModelScope.launch {
             val transaction = Transaction(
                 id = state.transactionId ?: 0,
-                uuid = UUID.randomUUID().toString(),
+                uuid = state.transactionUuid ?: UUID.randomUUID().toString(),
                 date = state.date,
                 description = desc,
                 amount = parsedAmount,

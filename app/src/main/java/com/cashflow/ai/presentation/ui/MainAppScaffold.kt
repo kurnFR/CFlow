@@ -132,6 +132,7 @@ fun MainAppScaffold() {
                 )
                 DashboardScreen(
                     viewModel = dashboardViewModel,
+                    onGenerateInsight = { dashboardViewModel.generateInsight() },
                     onNavigateToTransactions = {
                         navController.navigate(Screen.Transactions.route) {
                             popUpTo(Screen.Dashboard.route) { saveState = true }

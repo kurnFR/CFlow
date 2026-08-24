@@ -17,6 +17,7 @@ import com.cashflow.ai.domain.usecase.ai.SuggestCategoryUseCase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import com.cashflow.ai.data.sync.work.InsightWorker
 
 class CashFlowApp : Application() {
 
@@ -95,6 +96,7 @@ class CashFlowApp : Application() {
 
         // Schedule periodic background sync
         com.cashflow.ai.data.sync.work.SyncWorker.enqueuePeriodicSync(this)
+        InsightWorker.enqueueWeekly(this)
     }
 
     companion object {

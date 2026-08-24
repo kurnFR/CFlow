@@ -9,6 +9,7 @@ import com.cashflow.ai.data.mapper.toEntity
 import com.cashflow.ai.domain.model.Category
 import com.cashflow.ai.domain.model.CategoryExpense
 import com.cashflow.ai.domain.model.DateRange
+import com.cashflow.ai.domain.model.MonthlyClose
 import com.cashflow.ai.domain.model.MonthlyTotal
 import com.cashflow.ai.domain.model.Transaction
 import com.cashflow.ai.domain.model.TransactionSummary
@@ -238,5 +239,20 @@ class TransactionRepositoryImpl(
 
     override suspend fun getMostFrequentCategoryForQuery(query: String): String? = withContext(Dispatchers.IO) {
         if (query.isBlank()) null else transactionDao.getMostFrequentCategoryForQuery(query.trim())
+    }
+
+    override fun getLatestMonthlyClose(): Flow<MonthlyClose?> {
+        return transactionDao.getLatestMonthlyClose()
+            .map { it?.toDomain() }
+            .flowOn(Dispatchers.IO)
+    }
+
+    override suspend fun saveMonthlyClose(monthlyClose: MonthlyClose): Result<Unit> = withContext(Dispatchers.IO) {
+        try {
+            transactionDao.upsertMonthlyClose(monthlyClose.toEntity())
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
     }
 }

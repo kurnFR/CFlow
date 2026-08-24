@@ -3,6 +3,7 @@ package com.cashflow.ai.domain.repository
 import com.cashflow.ai.domain.model.Category
 import com.cashflow.ai.domain.model.CategoryExpense
 import com.cashflow.ai.domain.model.DateRange
+import com.cashflow.ai.domain.model.MonthlyClose
 import com.cashflow.ai.domain.model.MonthlyTotal
 import com.cashflow.ai.domain.model.Transaction
 import com.cashflow.ai.domain.model.TransactionSummary
@@ -52,4 +53,8 @@ interface TransactionRepository {
     suspend fun seedDefaultCategoriesIfEmpty()
 
     suspend fun getMostFrequentCategoryForQuery(query: String): String?
+
+    fun getLatestMonthlyClose(): Flow<MonthlyClose?>
+
+    suspend fun saveMonthlyClose(monthlyClose: MonthlyClose): Result<Unit>
 }

@@ -19,6 +19,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -50,6 +52,7 @@ import com.cashflow.ai.presentation.viewmodel.DashboardViewModel
 @Composable
 fun DashboardScreen(
     viewModel: DashboardViewModel,
+    onGenerateInsight: () -> Unit,
     onNavigateToTransactions: () -> Unit,
     onTransactionClick: (Transaction) -> Unit,
     modifier: Modifier = Modifier
@@ -84,6 +87,21 @@ fun DashboardScreen(
                             fontWeight = FontWeight.Bold,
                             style = MaterialTheme.typography.titleLarge
                         )
+                    }
+                },
+                actions = {
+                    IconButton(
+                        onClick = onGenerateInsight,
+                        enabled = !uiState.isGeneratingInsight
+                    ) {
+                        if (uiState.isGeneratingInsight) {
+                            CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
+                        } else {
+                            Icon(
+                                imageVector = Icons.Default.AutoAwesome,
+                                contentDescription = "Generate financial insight"
+                            )
+                        }
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -121,6 +139,38 @@ fun DashboardScreen(
                 // Metric Summary Cards
                 item {
                     SummaryCards(summary = uiState.summary)
+                }
+
+                item {
+                    val insight = uiState.insight
+                    Card(
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.45f)
+                        ),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    imageVector = Icons.Default.AutoAwesome,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.tertiary,
+                                    modifier = Modifier.size(22.dp)
+                                )
+                                Text(
+                                    text = insight?.headline ?: "Your financial insight will appear here",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.padding(start = 10.dp)
+                                )
+                            }
+                            Text(
+                                text = insight?.body ?: "Insights refresh weekly and can be generated anytime.",
+                                style = MaterialTheme.typography.bodyMedium,
+                                modifier = Modifier.padding(top = 8.dp)
+                            )
+                        }
+                    }
                 }
 
                 // Expense by Category (Pie Chart)

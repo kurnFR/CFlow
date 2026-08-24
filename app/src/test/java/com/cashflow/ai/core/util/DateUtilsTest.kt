@@ -28,4 +28,10 @@ class DateUtilsTest {
         assertTrue(start.endsWith("-01"))
         assertTrue(start <= end)
     }
+
+    @Test
+    fun invalidIsoDateIsRejected() {
+        assertTrue(!DateUtils.isValidDate("2026-02-30"))
+        assertTrue(!DateUtils.isValidDate("2026-2-03"))
+    }
 }

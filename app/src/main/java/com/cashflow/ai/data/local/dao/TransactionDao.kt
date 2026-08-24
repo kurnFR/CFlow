@@ -6,6 +6,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
+import com.cashflow.ai.data.local.entity.MonthlyCloseEntity
 import com.cashflow.ai.data.local.entity.TransactionEntity
 import kotlinx.coroutines.flow.Flow
 
@@ -99,4 +100,10 @@ interface TransactionDao {
         LIMIT 1
     """)
     suspend fun getMostFrequentCategoryForQuery(query: String): String?
+
+    @Query("SELECT * FROM monthly_closes ORDER BY month DESC LIMIT 1")
+    fun getLatestMonthlyClose(): Flow<MonthlyCloseEntity?>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun upsertMonthlyClose(monthlyClose: MonthlyCloseEntity)
 }

@@ -11,6 +11,12 @@ object DateUtils {
     private val displayFormat = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
     private val monthYearFormat = SimpleDateFormat("MMM yyyy", Locale.getDefault())
 
+    init {
+        isoFormat.isLenient = false
+        displayFormat.isLenient = false
+        monthYearFormat.isLenient = false
+    }
+
     fun today(): String {
         return isoFormat.format(Date())
     }
@@ -32,7 +38,7 @@ object DateUtils {
     }
 
     fun isValidDate(dateStr: String): Boolean {
-        return parseIsoDate(dateStr) != null
+        return parseIsoDate(dateStr)?.let { isoFormat.format(it) == dateStr } ?: false
     }
 
     fun formatDate(timestamp: Long): String {

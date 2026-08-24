@@ -81,6 +81,7 @@ class DashboardViewModelTest {
             searchQuery = org.mockito.ArgumentMatchers.any()
         )).thenReturn(flowOf(sampleTransactions))
         `when`(mockRepository.getAllCategories()).thenReturn(flowOf(emptyList()))
+        `when`(mockRepository.getLatestMonthlyClose()).thenReturn(flowOf(null))
 
         viewModel = DashboardViewModel(mockRepository)
     }
