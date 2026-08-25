@@ -1702,9 +1702,35 @@ APK output:
 
     app/build/outputs/apk/debug/app-debug.apk
 
-Install on a connected Android device:
+---
 
-    adb install -r app/build/outputs/apk/debug/app-debug.apk
+### 📦 Safe Sideloading & In-Place APK Upgrade Guide (Zero Data Loss)
+
+Since the app is distributed via direct APK downloads outside Google Play Store, follow these rules to ensure all your existing transactions, settings, and insights remain 100% intact when updating:
+
+#### 1. The Golden Rule: **Never Uninstall Before Updating**
+* ⚠️ **Do NOT uninstall the previous version** from your phone! Uninstalling an Android app deletes its private database directory (`/data/data/com.cashflow.ai/databases/`) and permanently wipes local data.
+* ✅ **In-Place Update (On Device)**:
+  1. Download the new `app-debug.apk` directly on your Android device.
+  2. Tap the downloaded file.
+  3. When Android asks: *"Do you want to update this app? Your existing data will not be lost."*, tap **Update**.
+* ✅ **In-Place Update (via ADB)**:
+  ```bash
+  adb install -r app/build/outputs/apk/debug/app-debug.apk
+  ```
+  *(The `-r` flag instructs Android OS to reinstall and replace the binary while preserving all application data and databases).*
+
+#### 2. Keystore Signature Guarantee
+* Both local Gradle builds and GitHub Actions CI use the committed `app/debug.keystore`.
+* This guarantees that new APK builds share the exact same cryptographic signature as prior builds, allowing Android Package Manager to verify and apply updates seamlessly without `INSTALL_FAILED_UPDATE_INCOMPATIBLE` errors.
+
+#### 3. Database Migration Integrity
+* Database version upgrades (e.g. `version = 2` for `monthly_closes`) use non-destructive Room `Migration` scripts (`MIGRATION_1_2`). Existing tables and transaction rows are never dropped during an update.
+
+#### 4. Google Sheets Cloud Backup Safety Net
+* If you have connected your Google account in **Settings**, all your transactions are also synchronized to your private Google Sheet. Even if you switch phones or clear app storage, signing in restores your transaction ledger.
+
+---
 
 □ Build signed APK/AAB
 □ Test on multiple devices (API 26-34)
