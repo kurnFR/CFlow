@@ -34,6 +34,8 @@ object CurrencyFormatter {
         return "$sign$formattedNumber"
     }
 
+    fun formatCurrency(amount: Double, currency: Currency = Currency.IDR): String = format(amount, currency)
+
     fun formatCompact(amount: Double, currency: Currency = Currency.IDR): String {
         val absAmount = abs(amount)
         val prefix = when (currency) {

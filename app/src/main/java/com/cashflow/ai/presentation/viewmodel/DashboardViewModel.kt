@@ -133,11 +133,7 @@ class DashboardViewModel(
 
         viewModelScope.launch {
             _isParsingChatInput.value = true
-            val parsedList = if (parseNaturalLanguageTransactionsUseCase != null) {
-                parseNaturalLanguageTransactionsUseCase(text)
-            } else {
-                emptyList()
-            }
+            val parsedList = parseNaturalLanguageTransactionsUseCase?.invoke(text) ?: emptyList()
             _isParsingChatInput.value = false
 
             if (parsedList.isNotEmpty()) {

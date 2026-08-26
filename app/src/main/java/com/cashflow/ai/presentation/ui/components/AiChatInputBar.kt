@@ -47,7 +47,7 @@ fun AiChatInputBar(
     isProcessing: Boolean = false,
     modifier: Modifier = Modifier
 ) {
-    val focusManager = LocalFocusManager()
+    val focusManager = LocalFocusManager.current
 
     Surface(
         modifier = modifier
