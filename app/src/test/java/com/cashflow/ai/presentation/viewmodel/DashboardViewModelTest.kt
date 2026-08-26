@@ -112,4 +112,12 @@ class DashboardViewModelTest {
 
         assertEquals(DateRange.THIS_WEEK, viewModel.uiState.value.selectedDateRange)
     }
+
+    @Test
+    fun onChatInputChanged_updatesChatText() = runTest {
+        viewModel.onChatInputChanged("bensin 30k")
+        advanceUntilIdle()
+
+        assertEquals("bensin 30k", viewModel.uiState.value.chatInputText)
+    }
 }

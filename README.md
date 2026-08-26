@@ -39,6 +39,7 @@ later as an optional language layer without making financial calculations opaque
 
 | Priority | Feature / Fix | Impact & User Benefit |
 |---|---|---|
+| **P0 - Must Have** | **Conversational Chat Input Bar (ChatGPT / Gemini Style)** | Allows natural language multi-item entry (e.g. `bensin 30000, makan nasi goreng 50.000, parkir 5000`) with auto-category classification, multiplier recognition (`30k`, `50rb`, `1.5jt`), and 1-tap batch review/save. |
 | **P0 - Must Have** | **Locale-Aware Currency & Number Engine** | Prevents silent data corruption for European (`€24,50`), Indonesian (`Rp 50.000`), and US (`$50.00`) decimal/thousand formats. |
 | **P0 - Must Have** | **Gemini Timeout & Offline Feedback Banner** | Enforces 15s timeout with instant fallback to on-device OCR, updating the AI Confidence Badge with *"Parsed Offline (On-Device OCR) • Please verify details"*. |
 | **P0 - Must Have** | **MonthlyClose Database Integrity** | Enforces `@Entity(primaryKeys = ["month"])` and `OnConflictStrategy.REPLACE` so repeated insight generation updates existing records safely. |

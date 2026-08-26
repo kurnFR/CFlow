@@ -26,6 +26,8 @@ interface TransactionRepository {
 
     suspend fun insertTransaction(transaction: Transaction): Result<Long>
 
+    suspend fun insertTransactions(transactions: List<Transaction>): Result<List<Long>>
+
     suspend fun updateTransaction(transaction: Transaction): Result<Unit>
 
     suspend fun deleteTransaction(transaction: Transaction): Result<Unit>

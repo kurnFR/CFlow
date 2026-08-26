@@ -77,6 +77,21 @@ class TransactionRepositoryImpl(
         }
     }
 
+    override suspend fun insertTransactions(transactions: List<Transaction>): Result<List<Long>> = withContext(Dispatchers.IO) {
+        try {
+            val entities = transactions.map {
+                it.toEntity().copy(updatedAt = System.currentTimeMillis())
+            }
+            val ids = mutableListOf<Long>()
+            for (entity in entities) {
+                ids.add(transactionDao.insertTransaction(entity))
+            }
+            Result.success(ids)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     override suspend fun updateTransaction(transaction: Transaction): Result<Unit> = withContext(Dispatchers.IO) {
         try {
             val entity = transaction.toEntity().copy(

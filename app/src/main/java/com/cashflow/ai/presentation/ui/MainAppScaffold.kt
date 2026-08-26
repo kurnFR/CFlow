@@ -103,7 +103,7 @@ fun MainAppScaffold() {
             }
         },
         floatingActionButton = {
-            if (showBottomBar) {
+            if (currentRoute == Screen.Transactions.route) {
                 FloatingActionButton(
                     onClick = { isAddChoiceSheetOpen = true },
                     containerColor = MaterialTheme.colorScheme.primary,
@@ -128,7 +128,10 @@ fun MainAppScaffold() {
         ) {
             composable(Screen.Dashboard.route) {
                 val dashboardViewModel: DashboardViewModel = viewModel(
-                    factory = DashboardViewModel.Factory(app.transactionRepository)
+                    factory = DashboardViewModel.Factory(
+                        app.transactionRepository,
+                        app.parseNaturalLanguageTransactionsUseCase
+                    )
                 )
                 DashboardScreen(
                     viewModel = dashboardViewModel,
@@ -142,7 +145,8 @@ fun MainAppScaffold() {
                     },
                     onTransactionClick = { transaction ->
                         navController.navigate(Screen.EditTransaction.createRoute(transaction.id))
-                    }
+                    },
+                    onAddAttachmentClicked = { isAddChoiceSheetOpen = true }
                 )
             }
 
