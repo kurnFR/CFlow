@@ -147,7 +147,7 @@ fun TransactionListScreen(
                 Spacer(modifier = Modifier.height(4.dp))
                 TypeFilterChips(
                     selectedType = uiState.selectedType,
-                    onTypeSelected = { viewModel.onTypeChanged(it) }
+                    onTypeSelected = { viewModel.onTypeFilterChanged(it) }
                 )
             }
 
@@ -221,8 +221,4 @@ fun TransactionListScreen(
             onDismiss = { showCustomDateRangePicker = false }
         )
     }
-}
-
-private fun TransactionListViewModel.onTypeChanged(type: com.cashflow.ai.domain.model.TransactionType?) {
-    onTypeFilterChanged(type)
 }
