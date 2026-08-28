@@ -15,6 +15,8 @@ interface TransactionRepository {
 
     fun getTransactions(
         dateRange: DateRange = DateRange.THIS_MONTH,
+        startDate: String? = null,
+        endDate: String? = null,
         category: String? = null,
         type: TransactionType? = null,
         searchQuery: String? = null

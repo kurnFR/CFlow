@@ -22,14 +22,14 @@ import com.cashflow.ai.domain.model.TransactionType
 fun DateRangeFilterChips(
     selectedRange: DateRange,
     onRangeSelected: (DateRange) -> Unit,
+    customRangeLabel: String = "Custom Range",
     modifier: Modifier = Modifier
 ) {
     val ranges = listOf(
         DateRange.TODAY to "Today",
         DateRange.THIS_WEEK to "This Week",
         DateRange.THIS_MONTH to "This Month",
-        DateRange.LAST_MONTH to "Last Month",
-        DateRange.LAST_6_MONTHS to "Last 6 Months"
+        DateRange.CUSTOM to customRangeLabel
     )
 
     Row(

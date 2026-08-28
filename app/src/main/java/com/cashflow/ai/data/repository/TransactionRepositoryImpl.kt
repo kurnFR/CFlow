@@ -35,16 +35,20 @@ class TransactionRepositoryImpl(
 
     override fun getTransactions(
         dateRange: DateRange,
+        startDate: String?,
+        endDate: String?,
         category: String?,
         type: TransactionType?,
         searchQuery: String?
     ): Flow<List<Transaction>> {
-        val (startDate, endDate) = DateUtils.getDateRangeBounds(dateRange)
+        val (computedStart, computedEnd) = DateUtils.getDateRangeBounds(dateRange, startDate, endDate)
+        val finalStart = if (dateRange == DateRange.CUSTOM && !startDate.isNullOrBlank()) startDate else computedStart
+        val finalEnd = if (dateRange == DateRange.CUSTOM && !endDate.isNullOrBlank()) endDate else computedEnd
         val formattedSearch = if (searchQuery.isNullOrBlank()) null else searchQuery.trim()
 
         return transactionDao.getFilteredTransactions(
-            startDate = startDate,
-            endDate = endDate,
+            startDate = finalStart,
+            endDate = finalEnd,
             category = category,
             type = type?.name,
             searchQuery = formattedSearch

@@ -5,6 +5,7 @@ import android.content.Intent
 import android.content.SharedPreferences
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
+import com.cashflow.ai.BuildConfig
 import com.cashflow.ai.core.constants.AppConstants
 import com.cashflow.ai.domain.model.Currency
 import com.cashflow.ai.domain.model.sync.GoogleAccountInfo
@@ -49,15 +50,23 @@ class GoogleAuthManager(private val context: Context) {
     }
 
     fun getGoogleSignInClient(): GoogleSignInClient {
-        val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+        val builder = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
             .requestEmail()
             .requestProfile()
             .requestScopes(
                 Scope(SheetsScopes.SPREADSHEETS),
                 Scope(DriveScopes.DRIVE_FILE)
             )
-            .build()
 
+        // IMPORTANT: requestIdToken provides the OAuth token required by GoogleAccountCredential
+        // so the app can access Google Sheets / Drive APIs. Without this, sign-in succeeds at the
+        // account level but API calls fail with "Unable to sign in" / token errors.
+        val clientId = BuildConfig.GOOGLE_CLIENT_ID
+        if (clientId.isNotBlank()) {
+            builder.requestIdToken(clientId)
+        }
+
+        val gso = builder.build()
         return GoogleSignIn.getClient(context, gso)
     }
 

@@ -151,15 +151,14 @@ fun MainAppScaffold() {
             }
 
             composable(Screen.Transactions.route) {
-                val listViewModel: TransactionListViewModel = viewModel(
+                val transactionListViewModel: TransactionListViewModel = viewModel(
                     factory = TransactionListViewModel.Factory(app.transactionRepository)
                 )
                 TransactionListScreen(
-                    viewModel = listViewModel,
+                    viewModel = transactionListViewModel,
                     onTransactionClick = { transaction ->
                         navController.navigate(Screen.EditTransaction.createRoute(transaction.id))
-                    },
-                    onAddTransactionClick = { isAddChoiceSheetOpen = true }
+                    }
                 )
             }
 

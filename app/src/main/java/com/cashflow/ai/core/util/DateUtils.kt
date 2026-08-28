@@ -63,7 +63,7 @@ object DateUtils {
         }
     }
 
-    fun getDateRangeBounds(dateRange: DateRange): Pair<String, String> {
+    fun getDateRangeBounds(dateRange: DateRange, customStartDate: String? = null, customEndDate: String? = null): Pair<String, String> {
         val calendar = Calendar.getInstance()
         val today = isoFormat.format(calendar.time)
 
@@ -110,7 +110,18 @@ object DateUtils {
                 Pair(start, today)
             }
 
-            DateRange.CUSTOM -> Pair("1970-01-01", "2099-12-31")
+            DateRange.CUSTOM -> {
+                if (!customStartDate.isNullOrBlank() && !customEndDate.isNullOrBlank()) {
+                    Pair(customStartDate, customEndDate)
+                } else {
+                    // Default to this month if custom dates not provided
+                    calendar.set(Calendar.DAY_OF_MONTH, 1)
+                    val start = isoFormat.format(calendar.time)
+                    calendar.set(Calendar.DAY_OF_MONTH, calendar.getActualMaximum(Calendar.DAY_OF_MONTH))
+                    val end = isoFormat.format(calendar.time)
+                    Pair(start, end)
+                }
+            }
         }
     }
 }
