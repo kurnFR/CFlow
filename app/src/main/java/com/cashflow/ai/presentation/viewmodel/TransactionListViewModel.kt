@@ -67,8 +67,15 @@ class TransactionListViewModel(
         _selectedCategory,
         _selectedType,
         _searchQuery
-    ) { dateRange, customStart, customEnd, category, type, query ->
-        TransactionFilterCriteria(dateRange, customStart, customEnd, category, type, query)
+    ) { flows: Array<Any?> ->
+        TransactionFilterCriteria(
+            flows[0] as DateRange,
+            flows[1] as String?,
+            flows[2] as String?,
+            flows[3] as String?,
+            flows[4] as TransactionType?,
+            flows[5] as String
+        )
     }.flatMapLatest { criteria ->
         transactionRepository.getTransactions(
             dateRange = criteria.dateRange,
