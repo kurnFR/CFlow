@@ -98,7 +98,8 @@ fun SettingsScreen(
             val account = task.result
             viewModel.handleSignInResult(account)
         } catch (e: Exception) {
-            viewModel.handleSignInResult(null)
+            val errorMsg = "Sign-in failed: ${e.localizedMessage} (${e.cause?.localizedMessage})"
+            viewModel.handleSignInResult(null, errorMsg)
         }
     }
 

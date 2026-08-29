@@ -30,6 +30,8 @@ import kotlinx.coroutines.launch
 
 data class DashboardUiState(
     val selectedDateRange: DateRange = DateRange.THIS_MONTH,
+    val customStartDate: String? = null,
+    val customEndDate: String? = null,
     val summary: TransactionSummary = TransactionSummary(),
     val categoryExpenses: List<CategoryExpense> = emptyList(),
     val monthlyTrends: List<MonthlyTotal> = emptyList(),
@@ -52,6 +54,8 @@ class DashboardViewModel(
 ) : ViewModel() {
 
     private val _selectedDateRange = MutableStateFlow(DateRange.THIS_MONTH)
+    private val _customStartDate = MutableStateFlow<String?>(null)
+    private val _customEndDate = MutableStateFlow<String?>(null)
     private val _isRefreshing = MutableStateFlow(false)
     private val _isGeneratingInsight = MutableStateFlow(false)
     private val _chatInputText = MutableStateFlow("")
@@ -64,8 +68,22 @@ class DashboardViewModel(
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val uiState: StateFlow<DashboardUiState> = _selectedDateRange.flatMapLatest { dateRange ->
-        val summaryFlow = transactionRepository.getSummary(dateRange)
-        val categoryExpensesFlow = transactionRepository.getCategoryExpenses(dateRange)
+        val summaryFlow = when {
+            dateRange == DateRange.CUSTOM -> transactionRepository.getSummary(
+                dateRange = dateRange,
+                startDate = _customStartDate.value,
+                endDate = _customEndDate.value
+            )
+            else -> transactionRepository.getSummary(dateRange)
+        }
+        val categoryExpensesFlow = when {
+            dateRange == DateRange.CUSTOM -> transactionRepository.getCategoryExpenses(
+                dateRange = dateRange,
+                startDate = _customStartDate.value,
+                endDate = _customEndDate.value
+            )
+            else -> transactionRepository.getCategoryExpenses(dateRange)
+        }
         val monthlyTrendsFlow = transactionRepository.getMonthlyTrends(DateRange.LAST_6_MONTHS)
         val recentTransactionsFlow = transactionRepository.getTransactions(dateRange = dateRange)
         val categoriesFlow = transactionRepository.getAllCategories()
@@ -81,7 +99,9 @@ class DashboardViewModel(
             _isParsingChatInput,
             _parsedBatchTransactions,
             _isBatchReviewSheetOpen,
-            _snackbarMessage
+            _snackbarMessage,
+            _customStartDate,
+            _customEndDate
         ) { args: Array<Any?> ->
             val summary = args[0] as TransactionSummary
             val categoryExpenses = args[1] as List<CategoryExpense>
@@ -93,9 +113,13 @@ class DashboardViewModel(
             val parsedBatch = args[7] as List<ParsedQuickTransaction>
             val isBatchOpen = args[8] as Boolean
             val snackbar = args[9] as? String
+            val customStart = args[10] as? String
+            val customEnd = args[11] as? String
 
             DashboardUiState(
                 selectedDateRange = dateRange,
+                customStartDate = customStart,
+                customEndDate = customEnd,
                 summary = summary,
                 categoryExpenses = categoryExpenses,
                 monthlyTrends = monthlyTrends,
@@ -121,6 +145,16 @@ class DashboardViewModel(
 
     fun onDateRangeChanged(newRange: DateRange) {
         _selectedDateRange.value = newRange
+        if (newRange != DateRange.CUSTOM) {
+            _customStartDate.value = null
+            _customEndDate.value = null
+        }
+    }
+
+    fun onCustomDateRangeSelected(startDate: String, endDate: String) {
+        _customStartDate.value = startDate
+        _customEndDate.value = endDate
+        _selectedDateRange.value = DateRange.CUSTOM
     }
 
     fun onChatInputChanged(newText: String) {
@@ -173,25 +207,47 @@ class DashboardViewModel(
     fun generateInsight() {
         viewModelScope.launch {
             _isGeneratingInsight.value = true
-            val summary = transactionRepository.getSummary(_selectedDateRange.value).first()
-            val categories = transactionRepository.getCategoryExpenses(_selectedDateRange.value).first()
-            val insight = insightGenerator(
-                period = _selectedDateRange.value.name,
-                summary = summary,
-                categoryExpenses = categories
-            )
-            transactionRepository.saveMonthlyClose(
-                MonthlyClose(
-                    month = DateUtils.today().substring(0, 7),
-                    income = summary.totalIncome,
-                    expense = summary.totalExpense,
-                    net = summary.netBalance,
-                    topExpenseCategory = categories.firstOrNull()?.category,
-                    insight = "${insight.headline}\n${insight.body}",
-                    isAiGenerated = false
+            try {
+                val selectedRange = _selectedDateRange.value
+                val summary = when (selectedRange) {
+                    DateRange.CUSTOM -> transactionRepository.getSummary(
+                        dateRange = selectedRange,
+                        startDate = _customStartDate.value,
+                        endDate = _customEndDate.value
+                    ).first()
+                    else -> transactionRepository.getSummary(selectedRange).first()
+                }
+                val categories = when (selectedRange) {
+                    DateRange.CUSTOM -> transactionRepository.getCategoryExpenses(
+                        dateRange = selectedRange,
+                        startDate = _customStartDate.value,
+                        endDate = _customEndDate.value
+                    ).first()
+                    else -> transactionRepository.getCategoryExpenses(selectedRange).first()
+                }
+                val insight = insightGenerator(
+                    period = selectedRange.name,
+                    summary = summary,
+                    categoryExpenses = categories
                 )
-            )
-            _isGeneratingInsight.value = false
+                transactionRepository.saveMonthlyClose(
+                    MonthlyClose(
+                        month = DateUtils.today().substring(0, 7),
+                        income = summary.totalIncome,
+                        expense = summary.totalExpense,
+                        net = summary.netBalance,
+                        topExpenseCategory = categories.maxByOrNull { it.total }?.category,
+                        insight = "${insight.headline}\n${insight.body}",
+                        isAiGenerated = true,
+                        generatedAt = System.currentTimeMillis()
+                    )
+                )
+                _snackbarMessage.value = "AI insight refreshed for ${selectedRange.name.lowercase().replace('_', ' ')}."
+            } catch (e: Exception) {
+                _snackbarMessage.value = "Could not refresh AI insight: ${e.localizedMessage ?: "Unknown error"}"
+            } finally {
+                _isGeneratingInsight.value = false
+            }
         }
     }
 

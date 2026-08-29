@@ -87,6 +87,12 @@ object DateUtils {
                 Pair(start, end)
             }
 
+            DateRange.MONTH_TO_DATE -> {
+                calendar.set(Calendar.DAY_OF_MONTH, 1)
+                val start = isoFormat.format(calendar.time)
+                Pair(start, today)
+            }
+
             DateRange.LAST_MONTH -> {
                 calendar.add(Calendar.MONTH, -1)
                 calendar.set(Calendar.DAY_OF_MONTH, 1)
@@ -107,6 +113,11 @@ object DateUtils {
                 calendar.add(Calendar.MONTH, -6)
                 calendar.set(Calendar.DAY_OF_MONTH, 1)
                 val start = isoFormat.format(calendar.time)
+                Pair(start, today)
+            }
+
+            DateRange.ALL_TIME -> {
+                val start = "2000-01-01"
                 Pair(start, today)
             }
 

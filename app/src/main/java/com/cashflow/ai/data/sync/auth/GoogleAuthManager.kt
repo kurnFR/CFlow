@@ -57,17 +57,17 @@ class GoogleAuthManager(private val context: Context) {
                 Scope(SheetsScopes.SPREADSHEETS),
                 Scope(DriveScopes.DRIVE_FILE)
             )
-
-        // IMPORTANT: requestIdToken provides the OAuth token required by GoogleAccountCredential
-        // so the app can access Google Sheets / Drive APIs. Without this, sign-in succeeds at the
-        // account level but API calls fail with "Unable to sign in" / token errors.
-        val clientId = BuildConfig.GOOGLE_CLIENT_ID
-        if (clientId.isNotBlank()) {
-            builder.requestIdToken(clientId)
-        }
-
+        // Note: requestIdToken() is NOT needed here — GoogleAccountCredential handles
+        // OAuth access tokens for Sheets/Drive API calls from the GoogleSignIn account.
+        // Including requestIdToken() with an Android client ID that doesn't exactly match
+        // the signing certificate's SHA-1 causes SIGN_IN_FAILED (error 12500).
         val gso = builder.build()
         return GoogleSignIn.getClient(context, gso)
+    }
+
+    fun hasGoogleClientIdConfigured(): Boolean {
+        return BuildConfig.GOOGLE_CLIENT_ID.trim().isNotBlank() &&
+            BuildConfig.GOOGLE_CLIENT_ID.contains(".apps.googleusercontent.com")
     }
 
     fun getSignInIntent(): Intent {

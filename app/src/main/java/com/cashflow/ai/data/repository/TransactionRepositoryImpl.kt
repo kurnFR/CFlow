@@ -127,10 +127,16 @@ class TransactionRepositoryImpl(
         }
     }
 
-    override fun getSummary(dateRange: DateRange): Flow<TransactionSummary> {
-        val (startDate, endDate) = DateUtils.getDateRangeBounds(dateRange)
-        val incomeFlow = transactionDao.getTotalIncome(startDate, endDate)
-        val expenseFlow = transactionDao.getTotalExpense(startDate, endDate)
+    override fun getSummary(
+        dateRange: DateRange,
+        startDate: String?,
+        endDate: String?
+    ): Flow<TransactionSummary> {
+        val (computedStart, computedEnd) = DateUtils.getDateRangeBounds(dateRange, startDate, endDate)
+        val finalStart = if (dateRange == DateRange.CUSTOM && !startDate.isNullOrBlank()) startDate else computedStart
+        val finalEnd = if (dateRange == DateRange.CUSTOM && !endDate.isNullOrBlank()) endDate else computedEnd
+        val incomeFlow = transactionDao.getTotalIncome(finalStart, finalEnd)
+        val expenseFlow = transactionDao.getTotalExpense(finalStart, finalEnd)
 
         return combine(incomeFlow, expenseFlow) { income, expense ->
             TransactionSummary(
@@ -141,9 +147,15 @@ class TransactionRepositoryImpl(
         }.flowOn(Dispatchers.IO)
     }
 
-    override fun getCategoryExpenses(dateRange: DateRange): Flow<List<CategoryExpense>> {
-        val (startDate, endDate) = DateUtils.getDateRangeBounds(dateRange)
-        val rawExpensesFlow = transactionDao.getExpenseByCategory(startDate, endDate)
+    override fun getCategoryExpenses(
+        dateRange: DateRange,
+        startDate: String?,
+        endDate: String?
+    ): Flow<List<CategoryExpense>> {
+        val (computedStart, computedEnd) = DateUtils.getDateRangeBounds(dateRange, startDate, endDate)
+        val finalStart = if (dateRange == DateRange.CUSTOM && !startDate.isNullOrBlank()) startDate else computedStart
+        val finalEnd = if (dateRange == DateRange.CUSTOM && !endDate.isNullOrBlank()) endDate else computedEnd
+        val rawExpensesFlow = transactionDao.getExpenseByCategory(finalStart, finalEnd)
         val categoriesFlow = categoryDao.getAllCategories()
 
         return combine(rawExpensesFlow, categoriesFlow) { rawList, categories ->

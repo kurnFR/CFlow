@@ -113,13 +113,13 @@ class SettingsViewModel(
         }
     }
 
-    fun handleSignInResult(account: GoogleSignInAccount?) {
+    fun handleSignInResult(account: GoogleSignInAccount?, error: String? = null) {
         val success = authManager.handleSignInResult(account)
         if (success) {
             _uiState.update { it.copy(statusMessage = "Signed in successfully!") }
             loadAvailableSpreadsheets()
         } else {
-            _uiState.update { it.copy(statusMessage = "Google Sign-In failed.") }
+            _uiState.update { it.copy(statusMessage = error ?: "Google Sign-In failed.") }
         }
     }
 

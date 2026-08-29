@@ -36,9 +36,17 @@ interface TransactionRepository {
 
     suspend fun deleteTransactionById(id: Long): Result<Unit>
 
-    fun getSummary(dateRange: DateRange = DateRange.THIS_MONTH): Flow<TransactionSummary>
+    fun getSummary(
+        dateRange: DateRange = DateRange.THIS_MONTH,
+        startDate: String? = null,
+        endDate: String? = null
+    ): Flow<TransactionSummary>
 
-    fun getCategoryExpenses(dateRange: DateRange = DateRange.THIS_MONTH): Flow<List<CategoryExpense>>
+    fun getCategoryExpenses(
+        dateRange: DateRange = DateRange.THIS_MONTH,
+        startDate: String? = null,
+        endDate: String? = null
+    ): Flow<List<CategoryExpense>>
 
     fun getMonthlyTrends(dateRange: DateRange = DateRange.LAST_6_MONTHS): Flow<List<MonthlyTotal>>
 

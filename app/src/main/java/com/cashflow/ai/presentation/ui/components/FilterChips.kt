@@ -29,6 +29,10 @@ fun DateRangeFilterChips(
         DateRange.TODAY to "Today",
         DateRange.THIS_WEEK to "This Week",
         DateRange.THIS_MONTH to "This Month",
+        DateRange.MONTH_TO_DATE to "Month to Date",
+        DateRange.LAST_3_MONTHS to "Last 3 Months",
+        DateRange.LAST_6_MONTHS to "Last 6 Months",
+        DateRange.ALL_TIME to "All History",
         DateRange.CUSTOM to customRangeLabel
     )
 

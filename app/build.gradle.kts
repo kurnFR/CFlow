@@ -5,7 +5,9 @@ plugins {
 }
 
 val geminiApiKey = providers.gradleProperty("GEMINI_API_KEY").orNull ?: ""
-val googleClientId = providers.gradleProperty("GOOGLE_CLIENT_ID").orNull ?: ""
+val googleClientId = providers.gradleProperty("GOOGLE_CLIENT_ID").orNull
+    ?: providers.gradleProperty("GOOGLE_WEB_CLIENT_ID").orNull
+    ?: ""
 val escapeBuildConfigValue: (String) -> String = { value ->
     value.replace("\\", "\\\\").replace("\"", "\\\"")
 }

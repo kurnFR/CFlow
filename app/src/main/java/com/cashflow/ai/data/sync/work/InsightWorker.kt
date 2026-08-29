@@ -48,9 +48,10 @@ class InsightWorker(
                     income = summary.totalIncome,
                     expense = summary.totalExpense,
                     net = summary.netBalance,
-                    topExpenseCategory = categories.firstOrNull()?.category,
+                    topExpenseCategory = categories.maxByOrNull { it.total }?.category,
                     insight = "${insight.headline}\n${insight.body}",
-                    isAiGenerated = false
+                    isAiGenerated = true,
+                    generatedAt = System.currentTimeMillis()
                 )
             )
             Result.success()
