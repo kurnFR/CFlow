@@ -93,6 +93,7 @@ fun MainAppScaffold() {
     val showBottomBar = currentRoute in listOf(
         Screen.Dashboard.route,
         Screen.Transactions.route,
+        Screen.AiChat.route,
         Screen.Settings.route
     )
 
@@ -244,6 +245,18 @@ fun MainAppScaffold() {
                 )
                 com.cashflow.ai.presentation.ui.screens.settings.SettingsScreen(
                     viewModel = settingsViewModel
+                )
+            }
+
+            composable(Screen.AiChat.route) {
+                com.cashflow.ai.presentation.ui.screens.aichat.AiChatScreen(
+                    viewModel = viewModel(
+                        factory = com.cashflow.ai.presentation.viewmodel.AiChatViewModel.Factory(
+                            app.transactionRepository,
+                            app.answerFinancialQuestionUseCase
+                        )
+                    ),
+                    onNavigateBack = { navController.popBackStack() }
                 )
             }
         }
