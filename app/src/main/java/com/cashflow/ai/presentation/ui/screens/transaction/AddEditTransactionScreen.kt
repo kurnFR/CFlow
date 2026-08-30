@@ -23,9 +23,11 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Notes
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -42,6 +44,7 @@ import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -80,6 +83,7 @@ fun AddEditTransactionScreen(
     val uiState by viewModel.uiState.collectAsState()
     var isDatePickerOpen by remember { mutableStateOf(false) }
     var isMoreDetailsExpanded by remember { mutableStateOf(false) }
+    var isDeleteConfirmationOpen by remember { mutableStateOf(false) }
 
     LaunchedEffect(receiptJson) {
         if (!receiptJson.isNullOrBlank()) {
@@ -95,6 +99,12 @@ fun AddEditTransactionScreen(
 
     LaunchedEffect(uiState.isSavedSuccessfully) {
         if (uiState.isSavedSuccessfully) {
+            onNavigateBack()
+        }
+    }
+
+    LaunchedEffect(uiState.isDeletedSuccessfully) {
+        if (uiState.isDeletedSuccessfully) {
             onNavigateBack()
         }
     }
@@ -121,6 +131,25 @@ fun AddEditTransactionScreen(
                             imageVector = Icons.Default.ArrowBack,
                             contentDescription = "Back"
                         )
+                    }
+                },
+                actions = {
+                    if (uiState.isEditMode) {
+                        if (uiState.isDeleting) {
+                            CircularProgressIndicator(
+                                modifier = Modifier
+                                    .padding(end = 16.dp)
+                                    .size(22.dp)
+                            )
+                        } else {
+                            IconButton(onClick = { isDeleteConfirmationOpen = true }) {
+                                Icon(
+                                    imageVector = Icons.Default.Delete,
+                                    contentDescription = "Delete Transaction",
+                                    tint = ExpenseRed
+                                )
+                            }
+                        }
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -416,6 +445,32 @@ fun AddEditTransactionScreen(
                     viewModel.onDateChanged(selectedDate)
                 },
                 onDismiss = { isDatePickerOpen = false }
+            )
+        }
+
+        // Delete Confirmation Dialog
+        if (isDeleteConfirmationOpen) {
+            AlertDialog(
+                onDismissRequest = { isDeleteConfirmationOpen = false },
+                title = { Text("Delete Transaction") },
+                text = {
+                    Text("Are you sure you want to delete \"${uiState.description}\"? This cannot be undone.")
+                },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            isDeleteConfirmationOpen = false
+                            viewModel.deleteTransaction()
+                        }
+                    ) {
+                        Text("Delete", color = ExpenseRed, fontWeight = FontWeight.Bold)
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { isDeleteConfirmationOpen = false }) {
+                        Text("Cancel")
+                    }
+                }
             )
         }
     }

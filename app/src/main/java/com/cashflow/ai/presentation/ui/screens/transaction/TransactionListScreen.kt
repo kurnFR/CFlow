@@ -20,6 +20,7 @@ import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.ReceiptLong
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -30,6 +31,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -64,6 +66,7 @@ fun TransactionListScreen(
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     var showCustomDateRangePicker by remember { mutableStateOf(false) }
+    var transactionToDelete by remember { mutableStateOf<Transaction?>(null) }
 
     LaunchedEffect(uiState.infoMessage) {
         uiState.infoMessage?.let { msg ->
@@ -201,7 +204,8 @@ fun TransactionListScreen(
                         TransactionCard(
                             transaction = transaction,
                             categoryIcon = categoryIconMap[transaction.category] ?: "🏷️",
-                            onClick = { onTransactionClick(transaction) }
+                            onClick = { onTransactionClick(transaction) },
+                            onLongClick = { transactionToDelete = transaction }
                         )
                     }
                 }
@@ -219,6 +223,32 @@ fun TransactionListScreen(
                 viewModel.onCustomDateRangeSelected(startDate, endDate)
             },
             onDismiss = { showCustomDateRangePicker = false }
+        )
+    }
+
+    // Delete Confirmation Dialog (long-press on card)
+    transactionToDelete?.let { tx ->
+        AlertDialog(
+            onDismissRequest = { transactionToDelete = null },
+            title = { Text("Delete Transaction") },
+            text = {
+                Text("Delete \"${tx.description}\" (${tx.category}, ${tx.date})? This cannot be undone.")
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        viewModel.deleteTransaction(tx)
+                        transactionToDelete = null
+                    }
+                ) {
+                    Text("Delete", color = MaterialTheme.colorScheme.error, fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { transactionToDelete = null }) {
+                    Text("Cancel")
+                }
+            }
         )
     }
 }
