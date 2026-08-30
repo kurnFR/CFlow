@@ -3,6 +3,7 @@ package com.cashflow.ai.presentation.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.cashflow.ai.core.constants.AppConstants
 import com.cashflow.ai.core.util.DateUtils
 import com.cashflow.ai.data.sync.SyncManager
 import com.cashflow.ai.data.sync.auth.GoogleAuthManager
@@ -117,9 +118,31 @@ class SettingsViewModel(
         val success = authManager.handleSignInResult(account)
         if (success) {
             _uiState.update { it.copy(statusMessage = "Signed in successfully!") }
-            loadAvailableSpreadsheets()
+            // Auto-configure a spreadsheet if none is selected yet, so sync works immediately
+            if (authManager.getSpreadsheetId().isNullOrBlank()) {
+                ensureSpreadsheetConfigured()
+            } else {
+                loadAvailableSpreadsheets()
+            }
         } else {
             _uiState.update { it.copy(statusMessage = error ?: "Google Sign-In failed.") }
+        }
+    }
+
+    private fun ensureSpreadsheetConfigured() {
+        viewModelScope.launch {
+            // First try to find an existing spreadsheet with the default name
+            val result = sheetsService.listSpreadsheets()
+            val existing = result.getOrDefault(emptyList()).firstOrNull {
+                it.name.equals(AppConstants.DEFAULT_SHEET_NAME, ignoreCase = true)
+            }
+            if (existing != null) {
+                authManager.setSpreadsheet(existing.id, existing.name)
+                _uiState.update { it.copy(statusMessage = "Connected to existing spreadsheet: ${existing.name}") }
+            } else {
+                // Create a new default spreadsheet and connect it
+                createNewSpreadsheet(AppConstants.DEFAULT_SHEET_NAME)
+            }
         }
     }
 
@@ -153,8 +176,14 @@ class SettingsViewModel(
             val result = sheetsService.createSpreadsheet(title)
             if (result.isSuccess) {
                 val info = result.getOrNull()
-                _uiState.update {
-                    it.copy(statusMessage = "Created spreadsheet: ${info?.name}")
+                if (info != null) {
+                    // SAVE the created spreadsheet as the active one so sync works
+                    authManager.setSpreadsheet(info.id, info.name)
+                    _uiState.update {
+                        it.copy(statusMessage = "Created & connected spreadsheet: ${info.name}")
+                    }
+                } else {
+                    _uiState.update { it.copy(statusMessage = "Created spreadsheet but could not read its ID") }
                 }
                 loadAvailableSpreadsheets()
             } else {
