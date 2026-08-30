@@ -12,6 +12,8 @@ import com.google.api.services.drive.Drive
 import com.google.api.services.drive.DriveScopes
 import com.google.api.services.sheets.v4.Sheets
 import com.google.api.services.sheets.v4.SheetsScopes
+import com.google.api.services.sheets.v4.model.BatchUpdateSpreadsheetRequest
+import com.google.api.services.sheets.v4.model.Request
 import com.google.api.services.sheets.v4.model.Spreadsheet
 import com.google.api.services.sheets.v4.model.SpreadsheetProperties
 import com.google.api.services.sheets.v4.model.ValueRange
@@ -38,6 +40,24 @@ class GoogleSheetsServiceImpl(
         return Sheets.Builder(httpTransport, jsonFactory, credential)
             .setApplicationName("CashFlow AI")
             .build()
+    }
+
+    /** Returns the title of the first sheet (tab) in the spreadsheet, or "Sheet1" fallback. */
+    private fun resolveFirstSheetName(sheetsClient: Sheets, spreadsheetId: String): String {
+        return try {
+            val meta = sheetsClient.spreadsheets().get(spreadsheetId)
+                .setFields("sheets.properties.title,sheets.properties.sheetId")
+                .execute()
+            meta.sheets?.firstOrNull()?.properties?.title ?: "Sheet1"
+        } catch (e: Exception) {
+            "Sheet1"
+        }
+    }
+
+    /** Build a range string using the resolved first sheet name to avoid 'Unable to parse range' errors. */
+    private fun rangeOnFirstSheet(sheetsClient: Sheets, spreadsheetId: String, suffix: String): String {
+        val sheetName = resolveFirstSheetName(sheetsClient, spreadsheetId)
+        return "$sheetName$suffix"
     }
 
     private fun getDriveClient(): Drive? {
@@ -68,6 +88,28 @@ class GoogleSheetsServiceImpl(
             val created = sheetsClient.spreadsheets().create(spreadsheet).execute()
             val spreadsheetId = created.spreadsheetId
             val spreadsheetUrl = created.spreadsheetUrl ?: "https://docs.google.com/spreadsheets/d/$spreadsheetId/edit"
+
+            // Rename the default first sheet (usually "Sheet1") to "Transactions"
+            // so hardcoded ranges like "Transactions!A2" work correctly.
+            try {
+                val sheetId = created.sheets?.firstOrNull()?.properties?.sheetId
+                if (sheetId != null) {
+                    val updateSheetTitle = Request().apply {
+                        updateSheetProperties = com.google.api.services.sheets.v4.model.UpdateSheetPropertiesRequest().apply {
+                            properties = com.google.api.services.sheets.v4.model.SheetProperties().apply {
+                                this.sheetId = sheetId
+                                title = "Transactions"
+                            }
+                            fields = "title"
+                        }
+                    }
+                    sheetsClient.spreadsheets().batchUpdate(spreadsheetId, BatchUpdateSpreadsheetRequest().apply {
+                        requests = listOf(updateSheetTitle)
+                    }).execute()
+                }
+            } catch (renameException: Exception) {
+                // If rename fails (e.g. sheet already named Transactions), continue anyway
+            }
 
             // Setup Header Row
             verifyAndSetupHeaders(spreadsheetId)
@@ -113,16 +155,18 @@ class GoogleSheetsServiceImpl(
             val sheetsClient = getSheetsClient()
                 ?: return@withContext Result.failure(IllegalStateException("User is not signed in to Google"))
 
+            val headersRange = rangeOnFirstSheet(sheetsClient, spreadsheetId, "!A1:M1")
+
             // Check if headers already exist
             val response = sheetsClient.spreadsheets().values()
-                .get(spreadsheetId, AppConstants.SHEET_HEADERS_RANGE)
+                .get(spreadsheetId, headersRange)
                 .execute()
 
             val existingValues = response.getValues()
             if (existingValues.isNullOrEmpty() || existingValues.first().isEmpty()) {
                 val headerBody = ValueRange().setValues(listOf(GoogleSheetsMapper.SHEET_HEADERS))
                 sheetsClient.spreadsheets().values()
-                    .update(spreadsheetId, AppConstants.SHEET_HEADERS_RANGE, headerBody)
+                    .update(spreadsheetId, headersRange, headerBody)
                     .setValueInputOption("USER_ENTERED")
                     .execute()
             }
@@ -144,6 +188,9 @@ class GoogleSheetsServiceImpl(
 
             verifyAndSetupHeaders(spreadsheetId)
 
+            // Resolve the actual first sheet name (may be "Sheet1" in existing spreadsheets)
+            val appendRange = rangeOnFirstSheet(sheetsClient, spreadsheetId, "!A2")
+
             // Batch in chunks of max 100 rows per request (PRD Section 9.3)
             val chunks = transactions.chunked(AppConstants.MAX_BATCH_SYNC_ROWS)
             var totalPushed = 0
@@ -153,7 +200,7 @@ class GoogleSheetsServiceImpl(
                 val body = ValueRange().setValues(rows)
 
                 sheetsClient.spreadsheets().values()
-                    .append(spreadsheetId, "Transactions!A2", body)
+                    .append(spreadsheetId, appendRange, body)
                     .setValueInputOption("USER_ENTERED")
                     .setInsertDataOption("INSERT_ROWS")
                     .execute()
@@ -172,8 +219,10 @@ class GoogleSheetsServiceImpl(
             val sheetsClient = getSheetsClient()
                 ?: return@withContext Result.failure(IllegalStateException("User is not signed in to Google"))
 
+            val rangeAll = rangeOnFirstSheet(sheetsClient, spreadsheetId, "!A2:M")
+
             val response = sheetsClient.spreadsheets().values()
-                .get(spreadsheetId, AppConstants.SHEET_RANGE_ALL)
+                .get(spreadsheetId, rangeAll)
                 .execute()
 
             val values = response.getValues() ?: emptyList<List<Any?>>()
