@@ -46,6 +46,8 @@ data class AddEditTransactionUiState(
     val isUserSelectedCategory: Boolean = false,
     val isSaving: Boolean = false,
     val isSavedSuccessfully: Boolean = false,
+    val isDeleting: Boolean = false,
+    val isDeletedSuccessfully: Boolean = false,
     val errorMessage: String? = null
 )
 
@@ -286,6 +288,28 @@ class AddEditTransactionViewModel(
                     it.copy(
                         isSaving = false,
                         errorMessage = result.exceptionOrNull()?.localizedMessage ?: "Failed to save transaction"
+                    )
+                }
+            }
+        }
+    }
+
+    fun deleteTransaction() {
+        val state = _uiState.value
+        val id = state.transactionId ?: return
+        if (id <= 0) return
+
+        _uiState.update { it.copy(isDeleting = true, errorMessage = null) }
+
+        viewModelScope.launch {
+            val result = transactionRepository.deleteTransactionById(id)
+            if (result.isSuccess) {
+                _uiState.update { it.copy(isDeleting = false, isDeletedSuccessfully = true) }
+            } else {
+                _uiState.update {
+                    it.copy(
+                        isDeleting = false,
+                        errorMessage = result.exceptionOrNull()?.localizedMessage ?: "Failed to delete transaction"
                     )
                 }
             }

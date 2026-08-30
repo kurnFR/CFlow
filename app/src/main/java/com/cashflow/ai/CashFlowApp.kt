@@ -68,6 +68,14 @@ class CashFlowApp : Application() {
         com.cashflow.ai.domain.usecase.ai.ParseNaturalLanguageTransactionsUseCase(parser = naturalLanguageParser)
     }
 
+    val financialAnalyticsEngine: com.cashflow.ai.data.ai.analytics.FinancialAnalyticsEngine by lazy {
+        com.cashflow.ai.data.ai.analytics.FinancialAnalyticsEngine()
+    }
+
+    val answerFinancialQuestionUseCase: com.cashflow.ai.domain.usecase.ai.AnswerFinancialQuestionUseCase by lazy {
+        com.cashflow.ai.domain.usecase.ai.AnswerFinancialQuestionUseCase(financialAnalyticsEngine)
+    }
+
     val extractReceiptTextUseCase: ExtractReceiptTextUseCase by lazy {
         ExtractReceiptTextUseCase(ocrEngine = ocrEngine)
     }

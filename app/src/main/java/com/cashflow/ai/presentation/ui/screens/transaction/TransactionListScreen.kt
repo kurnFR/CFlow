@@ -20,6 +20,7 @@ import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.ReceiptLong
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -30,13 +31,16 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -44,6 +48,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.cashflow.ai.domain.model.Transaction
+import com.cashflow.ai.core.util.DateUtils
+import com.cashflow.ai.domain.model.DateRange
+import com.cashflow.ai.presentation.ui.components.CustomDateRangePickerDialog
 import com.cashflow.ai.presentation.ui.components.DateRangeFilterChips
 import com.cashflow.ai.presentation.ui.components.TransactionCard
 import com.cashflow.ai.presentation.ui.components.TypeFilterChips
@@ -54,11 +61,12 @@ import com.cashflow.ai.presentation.viewmodel.TransactionListViewModel
 fun TransactionListScreen(
     viewModel: TransactionListViewModel,
     onTransactionClick: (Transaction) -> Unit,
-    onAddTransactionClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
+    var showCustomDateRangePicker by remember { mutableStateOf(false) }
+    var transactionToDelete by remember { mutableStateOf<Transaction?>(null) }
 
     LaunchedEffect(uiState.infoMessage) {
         uiState.infoMessage?.let { msg ->
@@ -87,15 +95,6 @@ fun TransactionListScreen(
             )
         },
         snackbarHost = { SnackbarHost(snackbarHostState) },
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = onAddTransactionClick,
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary
-            ) {
-                Icon(imageVector = Icons.Default.Add, contentDescription = "Add Transaction")
-            }
-        },
         modifier = modifier
     ) { innerPadding ->
         Column(
@@ -135,12 +134,23 @@ fun TransactionListScreen(
             Column(modifier = Modifier.padding(horizontal = 16.dp)) {
                 DateRangeFilterChips(
                     selectedRange = uiState.dateRange,
-                    onRangeSelected = { viewModel.onDateRangeChanged(it) }
+                    onRangeSelected = { range ->
+                        if (range == DateRange.CUSTOM) {
+                            showCustomDateRangePicker = true
+                        } else {
+                            viewModel.onDateRangeChanged(range)
+                        }
+                    },
+                    customRangeLabel = if (uiState.customStartDate != null && uiState.customEndDate != null) {
+                        "${DateUtils.formatDisplayDate(uiState.customStartDate!!)} - ${DateUtils.formatDisplayDate(uiState.customEndDate!!)}"
+                    } else {
+                        "Custom Range"
+                    }
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 TypeFilterChips(
                     selectedType = uiState.selectedType,
-                    onTypeSelected = { viewModel.onTypeChanged(it) }
+                    onTypeSelected = { viewModel.onTypeFilterChanged(it) }
                 )
             }
 
@@ -194,15 +204,51 @@ fun TransactionListScreen(
                         TransactionCard(
                             transaction = transaction,
                             categoryIcon = categoryIconMap[transaction.category] ?: "🏷️",
-                            onClick = { onTransactionClick(transaction) }
+                            onClick = { onTransactionClick(transaction) },
+                            onLongClick = { transactionToDelete = transaction }
                         )
                     }
                 }
             }
         }
     }
-}
 
-private fun TransactionListViewModel.onTypeChanged(type: com.cashflow.ai.domain.model.TransactionType?) {
-    onTypeFilterChanged(type)
+    // Custom Date Range Picker Dialog
+    if (showCustomDateRangePicker) {
+        CustomDateRangePickerDialog(
+            initialStartDate = uiState.customStartDate ?: DateUtils.getCurrentDateString(),
+            initialEndDate = uiState.customEndDate ?: DateUtils.getCurrentDateString(),
+            onConfirm = { startDate, endDate ->
+                showCustomDateRangePicker = false
+                viewModel.onCustomDateRangeSelected(startDate, endDate)
+            },
+            onDismiss = { showCustomDateRangePicker = false }
+        )
+    }
+
+    // Delete Confirmation Dialog (long-press on card)
+    transactionToDelete?.let { tx ->
+        AlertDialog(
+            onDismissRequest = { transactionToDelete = null },
+            title = { Text("Delete Transaction") },
+            text = {
+                Text("Delete \"${tx.description}\" (${tx.category}, ${tx.date})? This cannot be undone.")
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        viewModel.deleteTransaction(tx)
+                        transactionToDelete = null
+                    }
+                ) {
+                    Text("Delete", color = MaterialTheme.colorScheme.error, fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { transactionToDelete = null }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
 }

@@ -23,6 +23,8 @@ data class TransactionListUiState(
     val transactions: List<Transaction> = emptyList(),
     val categories: List<Category> = emptyList(),
     val dateRange: DateRange = DateRange.THIS_MONTH,
+    val customStartDate: String? = null,
+    val customEndDate: String? = null,
     val selectedCategory: String? = null,
     val selectedType: TransactionType? = null,
     val searchQuery: String = "",
@@ -35,6 +37,8 @@ class TransactionListViewModel(
 ) : ViewModel() {
 
     private val _dateRange = MutableStateFlow(DateRange.THIS_MONTH)
+    private val _customStartDate = MutableStateFlow<String?>(null)
+    private val _customEndDate = MutableStateFlow<String?>(null)
     private val _selectedCategory = MutableStateFlow<String?>(null)
     private val _selectedType = MutableStateFlow<TransactionType?>(null)
     private val _searchQuery = MutableStateFlow("")
@@ -58,14 +62,25 @@ class TransactionListViewModel(
     @OptIn(ExperimentalCoroutinesApi::class)
     val uiState: StateFlow<TransactionListUiState> = combine(
         _dateRange,
+        _customStartDate,
+        _customEndDate,
         _selectedCategory,
         _selectedType,
         _searchQuery
-    ) { dateRange, category, type, query ->
-        TransactionFilterCriteria(dateRange, category, type, query)
+    ) { flows: Array<Any?> ->
+        TransactionFilterCriteria(
+            flows[0] as DateRange,
+            flows[1] as String?,
+            flows[2] as String?,
+            flows[3] as String?,
+            flows[4] as TransactionType?,
+            flows[5] as String
+        )
     }.flatMapLatest { criteria ->
         transactionRepository.getTransactions(
             dateRange = criteria.dateRange,
+            startDate = criteria.customStartDate,
+            endDate = criteria.customEndDate,
             category = criteria.category,
             type = criteria.type,
             searchQuery = criteria.query
@@ -75,6 +90,8 @@ class TransactionListViewModel(
             transactions = transactions,
             categories = categories,
             dateRange = _dateRange.value,
+            customStartDate = _customStartDate.value,
+            customEndDate = _customEndDate.value,
             selectedCategory = _selectedCategory.value,
             selectedType = _selectedType.value,
             searchQuery = _searchQuery.value,
@@ -89,6 +106,12 @@ class TransactionListViewModel(
 
     fun onDateRangeChanged(newRange: DateRange) {
         _dateRange.value = newRange
+    }
+
+    fun onCustomDateRangeSelected(startDate: String, endDate: String) {
+        _customStartDate.value = startDate
+        _customEndDate.value = endDate
+        _dateRange.value = DateRange.CUSTOM
     }
 
     fun onCategoryFilterChanged(category: String?) {
@@ -118,6 +141,8 @@ class TransactionListViewModel(
 
     private data class TransactionFilterCriteria(
         val dateRange: DateRange,
+        val customStartDate: String?,
+        val customEndDate: String?,
         val category: String?,
         val type: TransactionType?,
         val query: String

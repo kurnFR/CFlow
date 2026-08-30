@@ -7,6 +7,8 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.outlined.BarChart
 import androidx.compose.material.icons.outlined.ListAlt
 import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.outlined.AutoAwesome
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
@@ -43,6 +45,12 @@ sealed class BottomNavItem(
         selectedIcon = Icons.Filled.Settings,
         unselectedIcon = Icons.Outlined.Settings
     )
+    data object AiChat : BottomNavItem(
+        route = Screen.AiChat.route,
+        title = "AI Chat",
+        selectedIcon = Icons.Filled.AutoAwesome,
+        unselectedIcon = Icons.Outlined.AutoAwesome
+    )
 }
 
 @Composable
@@ -53,6 +61,7 @@ fun AppBottomNavigation(
     val items = listOf(
         BottomNavItem.Dashboard,
         BottomNavItem.Transactions,
+        BottomNavItem.AiChat,
         BottomNavItem.Settings
     )
 
