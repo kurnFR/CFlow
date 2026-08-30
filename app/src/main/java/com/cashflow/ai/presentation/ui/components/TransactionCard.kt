@@ -1,5 +1,6 @@
 package com.cashflow.ai.presentation.ui.components
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
@@ -45,6 +46,7 @@ fun TransactionCard(
     modifier: Modifier = Modifier,
     categoryIcon: String = "🏷️"
 ) {
+    @OptIn(ExperimentalFoundationApi::class)
     Card(
         shape = RoundedCornerShape(14.dp),
         colors = CardDefaults.cardColors(
