@@ -94,18 +94,21 @@ class GoogleSheetsServiceImpl(
             try {
                 val sheetId = created.sheets?.firstOrNull()?.properties?.sheetId
                 if (sheetId != null) {
-                    val updateSheetTitle = Request().apply {
-                        updateSheetProperties = com.google.api.services.sheets.v4.model.UpdateSheetPropertiesRequest().apply {
-                            properties = com.google.api.services.sheets.v4.model.SheetProperties().apply {
-                                this.sheetId = sheetId
-                                title = "Transactions"
-                            }
-                            fields = "title"
-                        }
-                    }
-                    sheetsClient.spreadsheets().batchUpdate(spreadsheetId, BatchUpdateSpreadsheetRequest().apply {
-                        requests = listOf(updateSheetTitle)
-                    }).execute()
+                    val sheetProps = com.google.api.services.sheets.v4.model.SheetProperties()
+                    sheetProps.setSheetId(sheetId)
+                    sheetProps.setTitle("Transactions")
+
+                    val updateProps = com.google.api.services.sheets.v4.model.UpdateSheetPropertiesRequest()
+                    updateProps.setProperties(sheetProps)
+                    updateProps.setFields("title")
+
+                    val updateSheetTitle = Request()
+                    updateSheetTitle.setUpdateSheetProperties(updateProps)
+
+                    val batchRequest = BatchUpdateSpreadsheetRequest()
+                    batchRequest.setRequests(listOf(updateSheetTitle))
+
+                    sheetsClient.spreadsheets().batchUpdate(spreadsheetId, batchRequest).execute()
                 }
             } catch (renameException: Exception) {
                 // If rename fails (e.g. sheet already named Transactions), continue anyway
