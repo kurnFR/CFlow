@@ -6,6 +6,7 @@ import com.cashflow.ai.domain.model.Transaction
 import com.cashflow.ai.domain.model.TransactionType
 import java.util.Calendar
 import java.util.Locale
+import kotlin.math.max
 
 /**
  * Data-grounded financial analytics engine.
@@ -470,7 +471,7 @@ class FinancialAnalyticsEngine {
             append("• Predicted expenses: ${formatMoney(predictedExpense, currency)}\n")
             append("• Predicted income: ${formatMoney(predictedIncome, currency)}\n")
             append("• Predicted net: ${formatMoney(predictedIncome - predictedExpense, currency)}\n")
-            append("• Confidence: ${formatPercent(confidence * 100)}\n")
+            append("• Confidence: ${formatPercent(confidence * 100.0)}\n")
             append(trendDesc)
             if (predictedIncome - predictedExpense < 0) {
                 append("\n⚠️ This projection suggests a potential shortfall — consider trimming variable spending.")
@@ -540,7 +541,7 @@ class FinancialAnalyticsEngine {
     fun extractCategoryFilter(query: String): String? {
         val q = query.lowercase(Locale.ROOT)
         for (cat in COMMON_CATEGORY_WORDS) {
-            if (q.contains(cat.keyword)) return cat.categoryName
+            if (q.contains(cat.first)) return cat.second
         }
         return null
     }

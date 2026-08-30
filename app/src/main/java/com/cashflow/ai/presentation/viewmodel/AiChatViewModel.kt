@@ -10,6 +10,7 @@ import com.cashflow.ai.domain.usecase.ai.AnswerFinancialQuestionUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 data class AiChatUiState(
@@ -56,10 +57,10 @@ class AiChatViewModel(
 
         viewModelScope.launch {
             try {
-                val transactions = transactionRepository.getAllTransactions().firstOrNull() ?: emptyList()
-                val summary = transactionRepository.getSummary().firstOrNull()
+                val transactions = transactionRepository.getAllTransactions().first()
+                val summary = transactionRepository.getSummary().first()
 
-                val currency = summary?.currency ?: com.cashflow.ai.domain.model.Currency.IDR
+                val currency = summary.currency ?: com.cashflow.ai.domain.model.Currency.IDR
                 val result = answerFinancialQuestionUseCase(trimmed, transactions, currency)
 
                 addAssistantMessage(result.answer, result.isOffTopic)
