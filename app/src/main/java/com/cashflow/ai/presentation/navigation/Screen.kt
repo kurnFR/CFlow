@@ -18,4 +18,5 @@ sealed class Screen(val route: String) {
     }
     data object CameraScan : Screen("camera_scan")
     data object Settings : Screen("settings")
+    data object AiChat : Screen("ai_chat")
 }

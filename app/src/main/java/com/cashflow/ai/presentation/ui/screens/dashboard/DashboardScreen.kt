@@ -41,14 +41,19 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.cashflow.ai.core.util.DateUtils
+import com.cashflow.ai.domain.model.DateRange
 import com.cashflow.ai.domain.model.Transaction
 import com.cashflow.ai.presentation.ui.components.AiChatInputBar
 import com.cashflow.ai.presentation.ui.components.BatchTransactionReviewSheet
+import com.cashflow.ai.presentation.ui.components.CustomDateRangePickerDialog
 import com.cashflow.ai.presentation.ui.components.DateRangeFilterChips
 import com.cashflow.ai.presentation.ui.components.SummaryCards
 import com.cashflow.ai.presentation.ui.components.TransactionCard
@@ -69,6 +74,7 @@ fun DashboardScreen(
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     val batchSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    var showCustomDateRangePicker by remember { mutableStateOf(false) }
 
     val categoryIconMap = remember(uiState.categories) {
         uiState.categories.associate { it.name to it.icon }
@@ -117,8 +123,8 @@ fun DashboardScreen(
                             CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
                         } else {
                             Icon(
-                                imageVector = Icons.Default.AutoAwesome,
-                                contentDescription = "Generate financial insight"
+                                imageVector = Icons.Default.Refresh,
+                                contentDescription = "Refresh AI insight"
                             )
                         }
                     }
@@ -157,7 +163,18 @@ fun DashboardScreen(
                     item {
                         DateRangeFilterChips(
                             selectedRange = uiState.selectedDateRange,
-                            onRangeSelected = { viewModel.onDateRangeChanged(it) }
+                            onRangeSelected = { range ->
+                                if (range == DateRange.CUSTOM) {
+                                    showCustomDateRangePicker = true
+                                } else {
+                                    viewModel.onDateRangeChanged(range)
+                                }
+                            },
+                            customRangeLabel = if (uiState.customStartDate != null && uiState.customEndDate != null) {
+                                "${DateUtils.formatDisplayDate(uiState.customStartDate!!)} - ${DateUtils.formatDisplayDate(uiState.customEndDate!!)}"
+                            } else {
+                                "Custom Range"
+                            }
                         )
                     }
 
@@ -184,17 +201,23 @@ fun DashboardScreen(
                                         modifier = Modifier.size(22.dp)
                                     )
                                     Text(
-                                        text = insight?.headline ?: "Your financial insight will appear here",
+                                        text = insight?.headline ?: "AI insight",
                                         style = MaterialTheme.typography.titleMedium,
                                         fontWeight = FontWeight.Bold,
                                         modifier = Modifier.padding(start = 10.dp)
                                     )
                                 }
-                                Text(
-                                    text = insight?.body ?: "Insights refresh weekly and can be generated anytime.",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    modifier = Modifier.padding(top = 8.dp)
+
+                                val recommendationList = insight?.recommendations ?: listOf(
+                                    "Insights refresh weekly and can be generated anytime from the AI button."
                                 )
+                                recommendationList.forEachIndexed { index, recommendation ->
+                                    Text(
+                                        text = "• ${recommendation.trim()}",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        modifier = Modifier.padding(top = if (index == 0) 8.dp else 4.dp)
+                                    )
+                                }
                             }
                         }
                     }
@@ -297,6 +320,18 @@ fun DashboardScreen(
             onSaveAll = { items -> viewModel.saveBatchTransactions(items) },
             onDismiss = { viewModel.dismissBatchReviewSheet() },
             sheetState = batchSheetState
+        )
+    }
+
+    if (showCustomDateRangePicker) {
+        CustomDateRangePickerDialog(
+            initialStartDate = uiState.customStartDate ?: DateUtils.getCurrentDateString(),
+            initialEndDate = uiState.customEndDate ?: DateUtils.getCurrentDateString(),
+            onConfirm = { startDate, endDate ->
+                showCustomDateRangePicker = false
+                viewModel.onCustomDateRangeSelected(startDate, endDate)
+            },
+            onDismiss = { showCustomDateRangePicker = false }
         )
     }
 }

@@ -24,6 +24,12 @@
         android:supportsRtl="true"
         android:theme="@android:style/Theme.Material.Light.NoActionBar">
 
+        <!-- Google Sign-In: web client ID needed by GoogleAccountCredential to
+             obtain OAuth access tokens for Sheets/Drive API calls -->
+        <meta-data
+            android:name="default_web_client_id"
+            android:value="94249339917-ev2ovmoubm92qc5ve3du3krn0cmnbd68.apps.googleusercontent.com" />
+
         <activity
             android:name=".MainActivity"
             android:exported="true"
